@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>GDAI — 10 días Sprint Real</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green:        #4CAF50;
+    --green-light:  #EBF7EB;
+    --green-border: #A5D6A7;
+    --black:        #111111;
+    --gray-mid:     #666666;
+    --gray-light:   #F4F4F4;
+    --gray-border:  #DDDDDD;
+    --label-gray:   #AAAAAA;
+    --white:        #FFFFFF;
+  }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #CECECE;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 48px 24px;
+  }
+
+  /* ── Preview zoom ── */
+  @media screen {
+    body { zoom: 0.52; }
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE BASE
+  ════════════════════════════════════════ */
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.02em;
+  }
+  .counter {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--label-gray);
+    letter-spacing: 0.04em;
+  }
+
+  /* CONTENT — centrado verticalmente entre logo y footer */
+  .content {
+    position: absolute;
+    top: 140px;
+    bottom: 88px;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  /* BOTTOM BAR */
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 88px;
+    padding: 0 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #EEEEEE;
+  }
+  .bottom-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #BBBBBB;
+  }
+  .dots { display: flex; gap: 8px; align-items: center; }
+  .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #DDDDDD;
+  }
+  .dot.on { background: var(--green); }
+
+  /* ── TAG / PILL ── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    width: fit-content;
+    border: 1.5px solid var(--gray-border);
+    color: var(--gray-mid);
+    background: var(--white);
+  }
+  .tag.green {
+    background: var(--green-light);
+    border-color: var(--green-border);
+    color: var(--green);
+  }
+
+  /* ── HEADLINE ── */
+  .headline {
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+  .accent { color: var(--green); }
+
+  /* ── BODY TEXT ── */
+  .body-text {
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--gray-mid);
+    line-height: 1.55;
+  }
+  .body-text strong { color: var(--black); font-weight: 700; }
+
+  /* ── EXAMPLE CARD ── */
+  .example-card {
+    background: var(--gray-light);
+    border-left: 4px solid #CCCCCC;
+    padding: 24px 32px;
+    border-radius: 0 8px 8px 0;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--label-gray);
+    margin-bottom: 12px;
+  }
+  .card-content {
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .card-content strong { font-weight: 700; }
+
+  /* ── CHECKLIST ── */
+  .checklist { display: flex; flex-direction: column; gap: 20px; }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    font-size: 28px;
+    color: var(--black);
+    line-height: 1.5;
+  }
+  .check-item strong { font-weight: 700; }
+  .icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .icon.yes { background: var(--green); color: #fff; }
+  .icon.no  { background: #FFEBEE; color: #E53935; border: 1.5px solid #FFCDD2; }
+
+  /* ── FLOW ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .flow-tag {
+    padding: 10px 22px;
+    border: 2px solid var(--green);
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .flow-arrow { font-size: 20px; color: #AAAAAA; }
+
+  /* ── GRID 2x2 ── */
+  .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-card {
+    background: var(--gray-light);
+    border-top: 3px solid var(--green);
+    padding: 24px 28px;
+    border-radius: 0 0 8px 8px;
+  }
+  .grid-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .grid-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1.35;
+  }
+
+  /* ── CTA CARD ── */
+  .cta-card {
+    background: var(--green-light);
+    border: 1.5px solid var(--green-border);
+    border-radius: 12px;
+    padding: 32px 40px;
+  }
+  .cta-card p {
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .cta-card p strong { font-weight: 800; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SLIDE 1 — HOOK ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">01 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Sprint Real</span>
+    <div class="headline">
+      Qué pasa cuando<br>
+      rediseñás la operación<br>
+      de una empresa<br>
+      <span class="accent">en 10 días.</span>
+    </div>
+    <p class="body-text">Paso a paso real. Sin filtros.</p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SLIDE 2 — PROBLEMA ═══════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">02 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">El punto de partida</span>
+    <div class="headline">
+      Una agencia.<br>
+      <span class="accent">Tres silos.</span>
+    </div>
+    <div class="example-card">
+      <div class="card-label">La situación</div>
+      <div class="card-content">
+        3 herramientas que no se hablaban entre sí.<br>
+        Alguien pasaba datos a mano cada semana.<br>
+        <strong>4 horas perdidas. Sin falta.</strong>
+      </div>
+    </div>
+    <p class="body-text">
+      No era un problema de herramientas.<br>
+      Era un problema de <strong>arquitectura</strong>.
+    </p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 3 — DÍA 1–2 ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">03 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 1–2</span>
+    <div class="headline">
+      Diagnóstico<br>primero.
+    </div>
+    <div class="example-card">
+      <div class="card-label">Las preguntas clave</div>
+      <div class="card-content">
+        ¿Dónde vive cada dato? ¿Quién lo mueve?<br>
+        <strong>¿Qué pasa si esa persona falta?</strong>
+      </div>
+    </div>
+    <p class="body-text">
+      Antes de tocar nada, mapeamos el flujo completo.<br>
+      <strong>El diagnóstico revela el 80% del problema.</strong>
+    </p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 4 — DÍA 3–5 ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">04 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 3–5</span>
+    <div class="headline">
+      Diseño<br>del sistema.
+    </div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="icon no">✕</div>
+        <span>No automatizamos lo que estaban haciendo.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span><strong>Rediseñamos cómo debería funcionar.</strong><br>Después lo automatizamos.</span>
+      </div>
+    </div>
+    <p class="body-text">Esa diferencia lo cambia todo.</p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 5 — DÍA 6–9 ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">05 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 6–9</span>
+    <div class="headline">Build.</div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span>Conectamos las herramientas. Creamos los flujos.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span>Probamos con datos reales. Ajustamos.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span><strong>Sin código. Sin contratar a nadie nuevo.</strong></span>
+      </div>
+    </div>
+    <div class="flow">
+      <span class="flow-tag">Datos</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-tag">Flujos</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-tag">Control real</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-tag">Métricas</span>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 6 — DÍA 10 ═══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">06 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 10</span>
+    <div class="headline">
+      Deploy.<br>
+      <span class="accent">Listo.</span>
+    </div>
+    <div class="grid-2x2">
+      <div class="grid-card">
+        <div class="grid-num">01</div>
+        <div class="grid-title">El equipo lo usó desde el primer día</div>
+      </div>
+      <div class="grid-card">
+        <div class="grid-num">02</div>
+        <div class="grid-title">Las 4 horas semanales, eliminadas</div>
+      </div>
+      <div class="grid-card" style="grid-column: 1 / -1;">
+        <div class="grid-num">03</div>
+        <div class="grid-title">El proceso, documentado y replicable</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════ SLIDE 7 — CONCLUSIÓN ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">07 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag">Conclusión</span>
+    <div class="headline">
+      No necesitás<br>
+      más herramientas.<br>
+      <span class="accent">Necesitás que<br>conversen.</span>
+    </div>
+    <p class="body-text">Eso es un <strong>Sprint</strong>.</p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot on"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SLIDE 8 — CTA ════════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">08 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag">Próximo paso</span>
+    <div class="headline">
+      Si depende de que<br>
+      alguien lo haga<br>
+      <span class="accent">a mano,<br>hay un problema.</span>
+    </div>
+    <div class="cta-card">
+      <p>
+        Diagnosticamos tu caso <strong>gratis en 30 minutos.</strong><br>
+        → Link en el primer comentario.
+      </p>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Sprint de Automatización</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot on"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Datos runtime (DB + sesión WhatsApp)
+data/
+auth/
+
+# Variables de entorno
+.env.local
+.env
+
+# Misc
+.DS_Store
+*.log

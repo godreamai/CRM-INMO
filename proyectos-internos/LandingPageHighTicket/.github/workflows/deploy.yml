@@ -1,0 +1,22 @@
+name: Deploy presencia-web
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 72.60.136.253
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/www/presencia-web
+            git pull origin main
+            npm run build
+            pm2 restart presencia-web

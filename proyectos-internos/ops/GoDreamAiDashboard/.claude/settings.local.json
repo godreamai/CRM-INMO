@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nassa\\\\Desktop\\\\GODREAMAI\\\\proyectos-internos\\\\ops\\\\GoDreamAiDashboard\" -Directory -Exclude node_modules, .next, .git | ForEach-Object { $_.Name })",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

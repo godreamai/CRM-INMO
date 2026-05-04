@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>GDAI — Caso Real: El Sprint que entregué</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green:        #4CAF50;
+    --green-light:  #EBF7EB;
+    --green-border: #A5D6A7;
+    --black:        #111111;
+    --gray-mid:     #666666;
+    --gray-light:   #F4F4F4;
+    --gray-border:  #DDDDDD;
+    --label-gray:   #AAAAAA;
+    --white:        #FFFFFF;
+  }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #CECECE;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 48px 24px;
+  }
+
+  @media screen {
+    body { zoom: 0.52; }
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.02em;
+  }
+  .counter {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--label-gray);
+    letter-spacing: 0.04em;
+  }
+
+  .content {
+    position: absolute;
+    top: 140px;
+    bottom: 88px;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  /* BOTTOM BAR */
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 88px;
+    padding: 0 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #EEEEEE;
+  }
+  .bottom-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #BBBBBB;
+  }
+  .dots { display: flex; gap: 8px; align-items: center; }
+  .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #DDDDDD;
+  }
+  .dot.on { background: var(--green); }
+
+  /* TAG */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    width: fit-content;
+    border: 1.5px solid var(--gray-border);
+    color: var(--gray-mid);
+    background: var(--white);
+  }
+  .tag.green {
+    background: var(--green-light);
+    border-color: var(--green-border);
+    color: var(--green);
+  }
+  .tag.dark {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+  }
+
+  /* HEADLINE */
+  .headline {
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+  .headline.large {
+    font-size: 88px;
+  }
+  .headline.medium {
+    font-size: 68px;
+  }
+  .accent { color: var(--green); }
+
+  /* BODY TEXT */
+  .body-text {
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--gray-mid);
+    line-height: 1.55;
+  }
+  .body-text strong { color: var(--black); font-weight: 700; }
+
+  /* EXAMPLE CARD */
+  .example-card {
+    background: var(--gray-light);
+    border-left: 4px solid #CCCCCC;
+    padding: 24px 32px;
+    border-radius: 0 8px 8px 0;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--label-gray);
+    margin-bottom: 12px;
+  }
+  .card-content {
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .card-content strong { font-weight: 700; }
+
+  /* CHECKLIST */
+  .checklist { display: flex; flex-direction: column; gap: 20px; }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    font-size: 28px;
+    color: var(--black);
+    line-height: 1.5;
+  }
+  .check-item strong { font-weight: 700; }
+  .icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .icon.yes { background: var(--green); color: #fff; }
+  .icon.no  { background: #FFEBEE; color: #E53935; border: 1.5px solid #FFCDD2; }
+
+  /* STAT ROW */
+  .stat-row {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid var(--gray-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .stat-box {
+    flex: 1;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-right: 1.5px solid var(--gray-border);
+  }
+  .stat-box:last-child { border-right: none; }
+  .stat-before {
+    font-size: 17px;
+    font-weight: 700;
+    color: #E53935;
+    letter-spacing: 0.04em;
+    text-decoration: line-through;
+    text-decoration-color: #FFCDD2;
+  }
+  .stat-after {
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--green);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--gray-mid);
+    line-height: 1.4;
+  }
+
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .timeline-item {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    padding: 22px 0;
+    border-bottom: 1px solid #EEEEEE;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+  .tl-day {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    min-width: 80px;
+    padding-top: 3px;
+  }
+  .tl-text {
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--black);
+    line-height: 1.5;
+  }
+  .tl-text strong { font-weight: 700; }
+
+  /* CTA CARD */
+  .cta-card {
+    background: var(--green-light);
+    border: 1.5px solid var(--green-border);
+    border-radius: 12px;
+    padding: 32px 40px;
+  }
+  .cta-card p {
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .cta-card p strong { font-weight: 800; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SLIDE 1 — HOOK ══════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">01 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag dark">Caso Real</span>
+    <div class="headline large">
+      El Sprint<br>
+      que entregué.<br>
+      <span class="accent">El antes,<br>el después.</span>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 2 — EL CLIENTE ═══════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">02 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">El punto de partida</span>
+    <div class="headline">
+      Crecían.<br>
+      Pero operaban<br>
+      igual que cuando<br>
+      <span class="accent">eran 3.</span>
+    </div>
+    <div class="example-card">
+      <div class="card-label">El contexto</div>
+      <div class="card-content">
+        Agencia con 8 personas.<br>
+        3 herramientas. Ninguna se hablaba con las otras.<br>
+        <strong>Alguien pasaba datos a mano. Cada semana. Sin falta.</strong>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 3 — EL PROBLEMA ══════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">03 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag">El problema real</span>
+    <div class="headline medium">
+      No era<br>un problema<br>
+      de <span class="accent">herramientas.</span>
+    </div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="icon no">✕</div>
+        <span>No les faltaba un CRM nuevo.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon no">✕</div>
+        <span>No les faltaba contratar a alguien.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span><strong>Les faltaba que lo que tenían funcionara junto.</strong></span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4 — EL DIAGNÓSTICO ════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">04 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 1–2 · Diagnóstico</span>
+    <div class="headline">
+      Antes de tocar<br>nada:<br>
+      <span class="accent">entender.</span>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <span class="tl-day">Paso 1</span>
+        <span class="tl-text">Mapeamos cada dato: <strong>¿dónde vive y quién lo mueve?</strong></span>
+      </div>
+      <div class="timeline-item">
+        <span class="tl-day">Paso 2</span>
+        <span class="tl-text">Identificamos el cuello de botella real.</span>
+      </div>
+      <div class="timeline-item">
+        <span class="tl-day">Paso 3</span>
+        <span class="tl-text"><strong>Diseñamos cómo debería funcionar</strong> antes de automatizar.</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 5 — EL BUILD ═════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">05 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 3–9 · Build</span>
+    <div class="headline">
+      Construir<br>el sistema.
+    </div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span>Conectamos las 3 herramientas en un solo flujo.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span>Probamos con datos reales. Ajustamos en vivo.</span>
+      </div>
+      <div class="check-item">
+        <div class="icon yes">✓</div>
+        <span><strong>Sin código. Sin contratar. Sin cambiar lo que ya usaban.</strong></span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SLIDE 6 — RESULTADOS ═════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">06 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag green">Día 10 · Deploy</span>
+    <div class="headline">
+      Los números<br>
+      <span class="accent">reales.</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <span class="stat-before">4 hs</span>
+        <span class="stat-after">0</span>
+        <span class="stat-label">horas manuales por semana</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-before">3 silos</span>
+        <span class="stat-after">1</span>
+        <span class="stat-label">flujo central de datos</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-before">días</span>
+        <span class="stat-after">10</span>
+        <span class="stat-label">de diagnóstico a deploy</span>
+      </div>
+    </div>
+    <p class="body-text">
+      El equipo lo usó desde el primer día.<br>
+      <strong>El proceso quedó documentado y replicable.</strong>
+    </p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SLIDE 7 — APRENDIZAJE ══════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">07 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag">Lo que aprendí</span>
+    <div class="headline medium">
+      El problema casi<br>nunca es<br>la herramienta.<br>
+      <span class="accent">Es la arquitectura.</span>
+    </div>
+    <p class="body-text">
+      Comprar un CRM nuevo no resuelve nada<br>
+      si los datos siguen viviendo en 3 lugares distintos.<br>
+      <strong>Primero el diseño. Después la automatización.</strong>
+    </p>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot on"></div><div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SLIDE 8 — CTA ════════════════════════════════ -->
+<div class="slide">
+  <div class="top-bar">
+    <span class="logo">gdai</span>
+    <span class="counter">08 / 08</span>
+  </div>
+  <div class="content">
+    <span class="tag">Próximo paso</span>
+    <div class="headline medium">
+      Si alguien en tu equipo<br>
+      hace algo a mano<br>
+      que debería hacer<br>
+      <span class="accent">una máquina...</span>
+    </div>
+    <div class="cta-card">
+      <p>
+        Diagnosticamos tu operación <strong>gratis en 30 minutos.</strong><br>
+        → Link en el primer comentario.
+      </p>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="bottom-label">Go Dream AI · Sprint Real</span>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot on"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

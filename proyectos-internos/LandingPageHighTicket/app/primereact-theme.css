@@ -1,0 +1,243 @@
+/* Estilos personalizados para PrimeReact que se adaptan al tema */
+
+/* Calendar */
+.p-calendar {
+  width: 100%;
+}
+
+.p-calendar .p-inputtext {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.p-calendar .p-inputtext:enabled:hover {
+  border-color: hsl(var(--primary-accent) / 0.5);
+}
+
+.p-calendar .p-inputtext:enabled:focus {
+  border-color: hsl(var(--primary-accent));
+  box-shadow: 0 0 0 0.2rem hsl(var(--primary-accent) / 0.2);
+}
+
+.p-calendar .p-inputtext.p-invalid {
+  border-color: hsl(var(--destructive));
+}
+
+.p-calendar .p-datepicker-trigger {
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.p-calendar .p-datepicker-trigger:hover {
+  background-color: hsl(var(--muted) / 0.8);
+}
+
+/* Dropdown */
+.p-dropdown {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  transition: all 0.2s;
+}
+
+.p-dropdown:not(.p-disabled):hover {
+  border-color: hsl(var(--primary-accent) / 0.5);
+}
+
+.p-dropdown:not(.p-disabled).p-focus {
+  border-color: hsl(var(--primary-accent));
+  box-shadow: 0 0 0 0.2rem hsl(var(--primary-accent) / 0.2);
+}
+
+.p-dropdown.p-invalid {
+  border-color: hsl(var(--destructive));
+}
+
+.p-dropdown .p-dropdown-label {
+  padding: 0.75rem;
+  color: hsl(var(--foreground));
+  background: transparent;
+}
+
+.p-dropdown .p-dropdown-trigger {
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  width: 2.5rem;
+}
+
+.p-dropdown-panel {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+  padding: 0.75rem 1rem;
+  color: hsl(var(--popover-foreground));
+  border-radius: 0.25rem;
+  margin: 0.25rem;
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+  background-color: hsl(var(--primary-accent));
+  color: hsl(var(--primary-foreground));
+}
+
+/* InputText */
+.p-inputtext {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.p-inputtext:enabled:hover {
+  border-color: hsl(var(--primary-accent) / 0.5);
+}
+
+.p-inputtext:enabled:focus {
+  border-color: hsl(var(--primary-accent));
+  box-shadow: 0 0 0 0.2rem hsl(var(--primary-accent) / 0.2);
+  outline: none;
+}
+
+.p-inputtext.p-invalid {
+  border-color: hsl(var(--destructive));
+}
+
+/* InputTextarea */
+.p-inputtextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.p-inputtextarea:enabled:hover {
+  border-color: hsl(var(--primary-accent) / 0.5);
+}
+
+.p-inputtextarea:enabled:focus {
+  border-color: hsl(var(--primary-accent));
+  box-shadow: 0 0 0 0.2rem hsl(var(--primary-accent) / 0.2);
+  outline: none;
+}
+
+.p-inputtextarea.p-invalid {
+  border-color: hsl(var(--destructive));
+}
+
+/* Button */
+.p-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.p-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.p-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.p-button.p-button-loading {
+  opacity: 0.7;
+}
+
+/* Calendar Panel */
+.p-datepicker {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.5rem;
+}
+
+.p-datepicker .p-datepicker-header {
+  background-color: transparent;
+  border: none;
+  padding: 0.5rem;
+}
+
+.p-datepicker .p-datepicker-prev,
+.p-datepicker .p-datepicker-next {
+  color: hsl(var(--foreground));
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.p-datepicker .p-datepicker-prev:hover,
+.p-datepicker .p-datepicker-next:hover {
+  background-color: hsl(var(--muted));
+}
+
+.p-datepicker .p-datepicker-title {
+  color: hsl(var(--foreground));
+}
+
+.p-datepicker table th {
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  padding: 0.5rem;
+}
+
+.p-datepicker table td > span {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.25rem;
+  color: hsl(var(--foreground));
+  transition: all 0.2s;
+}
+
+.p-datepicker table td > span:not(.p-disabled):not(.p-highlight):hover {
+  background-color: hsl(var(--muted));
+}
+
+.p-datepicker table td > span.p-highlight {
+  background-color: hsl(var(--primary-accent));
+  color: hsl(var(--primary-foreground));
+}
+
+.p-datepicker table td.p-datepicker-other-month > span {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
+
+/* Overlay */
+.p-component-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+

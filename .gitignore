@@ -1,0 +1,55 @@
+# Dependencies
+**/node_modules/
+**/.pnpm-store/
+
+# Build outputs
+**/.next/
+**/dist/
+**/build/
+**/.turbo/
+**/.cache/
+**/out/
+
+# Environment & secrets
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+!**/.env.local.example
+
+# TypeScript build info
+**/tsconfig.tsbuildinfo
+**/next-env.d.ts
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/pnpm-debug.log*
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+
+# Compiled output
+**/*.js.map
+
+# Vercel
+**/.vercel/
+
+# Claude local state (no es necesario sincronizar)
+.claude/settings.local.json
