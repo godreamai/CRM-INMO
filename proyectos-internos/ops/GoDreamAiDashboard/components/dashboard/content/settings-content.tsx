@@ -23,11 +23,11 @@ import {
   deleteAlertSetting,
   createAlertSetting
 } from "@/lib/opportunities";
-import { OPPORTUNITY_STATE_LABELS } from "@/lib/types";
+import { OPPORTUNITY_STATE_LABELS, type OpportunityState, type AlertSetting } from "@/lib/types";
 import { Plus, Trash2 } from "lucide-react";
 
 export function SettingsContent() {
-  const [settings, setSettings] = useState<any[]>([]);
+  const [settings, setSettings] = useState<AlertSetting[]>([]);
   const [draftMessages, setDraftMessages] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export function SettingsContent() {
       const data = await getAlertSettings();
       setSettings(data);
       const drafts: Record<string, string> = {};
-      data.forEach((s: any) => drafts[s.state] = s.alert_message || "");
+      data.forEach((s: AlertSetting) => { drafts[s.state] = s.alert_message ?? ""; });
       setDraftMessages(drafts);
     } catch (err) {
       console.error(err);
@@ -179,7 +179,7 @@ export function SettingsContent() {
                     <option value="">Seleccionar...</option>
                     {availableStates.map(state => (
                       <option key={state} value={state}>
-                        {(OPPORTUNITY_STATE_LABELS as any)[state]}
+                        {OPPORTUNITY_STATE_LABELS[state as OpportunityState] ?? state}
                       </option>
                     ))}
                   </select>

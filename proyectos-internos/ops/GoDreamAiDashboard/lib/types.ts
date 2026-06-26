@@ -1,3 +1,5 @@
+export type Section = "overview" | "opportunities" | "content-calendar" | "settings";
+
 export type OpportunityState =
   | 'nuevo'
   | 'conexion'
@@ -135,4 +137,31 @@ export interface OpportunityNote {
   user_id: string | null;
   user_name: string;
   created_at: string;
+}
+
+export interface PriorityAlert {
+  opportunity_id: string;
+  full_name: string;
+  state: string;
+  daysInactive: number;
+  severity: 'low' | 'medium' | 'high';
+  limit: number;
+  message: string;
+}
+
+export interface ActivityItem {
+  id: string;
+  lead_name: string | null;
+  old_state: string | null;
+  new_state: string;
+  user_name: string | null;
+  changed_at: string;
+}
+
+export interface AlertSetting {
+  id: string;
+  state: string;
+  days_limit: number;
+  severity: 'low' | 'medium' | 'high';
+  alert_message?: string;
 }

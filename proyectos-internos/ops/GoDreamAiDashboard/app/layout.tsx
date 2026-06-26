@@ -23,8 +23,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Pulse | Engineering Metrics & Incident Response',
-  description: 'Monitor system health, track incidents, manage deployments, and analyze engineering performance.',
+  title: 'Pulse | Sales CRM — GoDreamAI',
+  description: 'CRM operativo para gestión de prospectos, pipeline de ventas y calendario de contenido.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -57,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}>
+    <html lang="es" className={`${dmSans.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased bg-background text-foreground">
         {children}
         <Analytics />

@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { Section } from "@/lib/types";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { MainContent } from "@/components/dashboard/main-content";
 import { RightPanel } from "@/components/dashboard/right-panel";
-
-export type Section =
-  | "overview"
-  | "opportunities"
-  | "content-calendar"
-  | "settings";
 
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState<Section>("overview");
@@ -24,20 +19,15 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Left Sidebar */}
       <AppSidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
       />
-
-      {/* Main Content */}
       <MainContent
         activeSection={activeSection}
         onNavigate={handleNavigate}
         searchQuery={searchQuery}
       />
-
-      {/* Right Panel */}
       <RightPanel activeSection={activeSection} />
     </div>
   );

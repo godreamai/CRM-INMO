@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { DecisionMaker, OpportunityState, OpportunityNote } from './types';
+import type { DecisionMaker, OpportunityState, OpportunityNote, PriorityAlert } from './types';
 
 export interface GetOpportunitiesParams {
     page?: number;
@@ -93,7 +93,7 @@ export async function getOpportunityCounts() {
         }
 
         const counts: Record<string, number> = {};
-        data.forEach((item) => {
+        data.forEach((item: { state: string | null }) => {
             if (item.state) {
                 counts[item.state] = (counts[item.state] || 0) + 1;
             }
@@ -219,8 +219,8 @@ export async function getRealMetrics() {
         };
 
         const total = data.length;
-        const counts = data.reduce((acc: any, item) => {
-            acc[item.state] = (acc[item.state] || 0) + 1;
+        const counts = data.reduce((acc: Record<string, number>, item: { state: string | null }) => {
+            if (item.state) acc[item.state] = (acc[item.state] || 0) + 1;
             return acc;
         }, {});
 
@@ -253,7 +253,7 @@ export async function getPriorityAlerts() {
 
         if (settingsError || oppsError || !settings || !opportunities) return [];
 
-        const alerts: any[] = [];
+        const alerts: PriorityAlert[] = [];
         const now = new Date();
 
         // Optimized: Fetch all history in one go to avoid N queries
