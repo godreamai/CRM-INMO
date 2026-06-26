@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(New-Item -Path \"C:\\\\Users\\\\Nassa\\\\Desktop\\\\GODREAMAI\\\\proyectos-internos\\\\whatsapp-bot\\\\README.md\" -ItemType File -Force)",
-      "Bash(Out-Null)",
-      "PowerShell(New-Item *)"
-    ]
-  }
-}

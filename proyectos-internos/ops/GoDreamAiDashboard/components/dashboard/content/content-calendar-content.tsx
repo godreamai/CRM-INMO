@@ -1,781 +1,1445 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
-    Calendar as CalendarIcon,
-    Plus,
-    Upload,
-    FileText,
-    Video,
-    Layout,
-    CheckCircle2,
-    Circle,
-    ExternalLink,
-    MoreHorizontal,
-    ChevronLeft,
-    ChevronRight,
-    Filter,
-    Download,
-    Share2,
-    AlertCircle,
-    HelpCircle,
-    Loader2,
-    Trash2,
-    BookOpen
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+  ChevronLeft, ChevronRight, Video, Layout, Image, FileText, Linkedin,
+  Plus, Loader2, Trash2, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown,
+  Search, FileEdit, Upload, CheckCircle2, XCircle, Wand2, Copy, Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger
-} from '@/components/ui/tooltip';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn } from '@/lib/utils';
-import { ContentItem, ContentStatus, ContentType } from '@/lib/types';
 import {
-    getContentCalendar,
-    createContentItem,
-    createMultipleContentItems,
-    updateContentStatus,
-    deleteContentItem
-} from '@/lib/content';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import { toast } from 'sonner';
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  getContentCalendarByMonth, createContentItem, createMultipleContentItems,
+  updateContentEstado, updateContentItem, deleteContentItem,
+} from "@/lib/content";
+import type { ContentItem, ContentTipo, ContentPilar, ContentEstado, ContentFormato } from "@/lib/types";
 
-const TYPE_ICONS: Record<ContentType, React.ReactNode> = {
-    video: <Video className="w-4 h-4" />,
-    carousel: <Layout className="w-4 h-4" />,
-    image: <FileText className="w-4 h-4" />,
-    thread: <FileText className="w-4 h-4" />,
-    article: <FileText className="w-4 h-4" />,
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const TIPO_CONFIG: Record<ContentTipo, { label: string; color: string; dot: string; icon: React.ReactNode }> = {
+  reel:          { label: "Reel",         color: "bg-chart-1/15 text-chart-1",       dot: "bg-chart-1",       icon: <Video    className="w-3 h-3" /> },
+  carrusel:      { label: "Carrusel",     color: "bg-chart-2/15 text-chart-2",       dot: "bg-chart-2",       icon: <Layout   className="w-3 h-3" /> },
+  historia:      { label: "Historia",     color: "bg-chart-3/15 text-chart-3",       dot: "bg-chart-3",       icon: <Image    className="w-3 h-3" /> },
+  post_ig:       { label: "Post IG",      color: "bg-chart-4/15 text-chart-4",       dot: "bg-chart-4",       icon: <FileText className="w-3 h-3" /> },
+  post_linkedin: { label: "LinkedIn",     color: "bg-violet-500/15 text-violet-500", dot: "bg-violet-500",    icon: <Linkedin className="w-3 h-3" /> },
 };
 
-const STATUS_COLORS: Record<ContentStatus, string> = {
-    idea: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
-    draft: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    scheduled: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    published: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-    cancelled: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+const PILAR_CONFIG: Record<ContentPilar, { label: string; color: string }> = {
+  DOLOR:         { label: "Dolor",        color: "bg-rose-500/10 text-rose-500"     },
+  TRANSFORMACION:{ label: "Transf.",      color: "bg-emerald-500/10 text-emerald-600" },
+  AUTORIDAD:     { label: "Autoridad",    color: "bg-blue-500/10 text-blue-500"     },
+  OBJECION:      { label: "Objeción",     color: "bg-amber-500/10 text-amber-600"   },
+  FUNDADOR:      { label: "Fundador",     color: "bg-purple-500/10 text-purple-600" },
 };
+
+const ESTADO_CONFIG: Record<ContentEstado, { label: string; styles: string }> = {
+  borrador: { label: "Borrador", styles: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20" },
+  aprobado: { label: "Aprobado", styles: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"   },
+  publicado:{ label: "Publicado",styles: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" },
+};
+
+const FORMATO_LABELS: Record<ContentFormato, string> = {
+  cara_camara:      "Cara a cámara",
+  pantalla:         "Pantalla",
+  carrusel_diseno:  "Carrusel diseño",
+  solo_texto:       "Solo texto",
+};
+
+const DAY_LABELS    = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const MONTH_NAMES   = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate(); }
+function getFirstWeekday(y: number, m: number) {
+  const d = new Date(y, m, 1).getDay();
+  return d === 0 ? 6 : d - 1;
+}
+function toDateStr(y: number, m: number, d: number) {
+  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+function todayStr() {
+  const d = new Date();
+  return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function truncate(s: string | null | undefined, n: number) {
+  if (!s) return "-";
+  return s.length <= n ? s : s.slice(0, n) + "…";
+}
+
+// ─── Empty form ───────────────────────────────────────────────────────────────
+
+const EMPTY_FORM = {
+  tipo:               "reel" as ContentTipo,
+  pilar:              "DOLOR" as ContentPilar,
+  fecha_publicacion:  "",
+  estado:             "borrador" as ContentEstado,
+  hook:               "",
+  agitacion:          "",
+  reencuadre:         "",
+  sistema:            "",
+  cta:                "",
+  caption:            "",
+  hashtags:           [] as string[],
+  descripcion_visual: "",
+  formato_produccion: null as ContentFormato | null,
+  guion:              "",
+  duracion_seg:       null as number | null,
+  slides:             null,
+  secuencia:          null,
+  imagen_url:         "",
+  prompt_imagen:      "",
+};
+
+// ─── Brief assembler ─────────────────────────────────────────────────────────
+
+const BRIEF_SYSTEM_PROMPT = `# ROL
+Sos un diseñador UI/UX experto en contenido visual para redes sociales con ojo crítico de art director.
+Sabés cuándo una imagen está sobrecargada y cuándo comunica con claridad. Tu estándar es alto: cada pieza tiene que funcionar sola, sin explicación.
+Tu tarea es crear Historias y Carruseles de Instagram que se vean reales, publicables y con intención.
+El objetivo del contenido es mostrar un dolor real o educar — no vender. Las piezas tienen que resonar, no convencer.
+
+# IMÁGENES DE REFERENCIA
+Te voy a pasar imágenes de referencia. Usálas para:
+1. Replicar el esquema de color y diseño exacto (fondo, texto, acentos) — no impongas tu propio palette
+2. Crear mi avatar visual con mi cara, estructura facial, pelo, tono de piel, edad y contextura exactos
+No mezcles estilos entre referencias. Si todas las referencias son de un color de fondo, usá ese. Si son de otro, usá ese.
+
+# CRITERIO DE DISEÑO (UI/UX)
+- Menos es más. Si una pieza puede comunicar con menos elementos, hacelo con menos.
+- Jerarquía visual clara: el ojo del lector tiene que saber qué leer primero sin esfuerzo.
+- No cargues la imagen con texto. Máximo 1 frase principal por pieza, corta y fuerte.
+- No agregues objetos decorativos que no suman. Cada elemento tiene que justificar su presencia.
+- Espaciado generoso. Respiración visual. Sin apilar elementos.
+- Si la pieza se ve "llena", sacá algo — nunca agregues más.
+
+# FORMATO
+## Historias: 9:16 vertical, 1080x1920. Dejar espacio arriba (interfaz IG) y abajo (stickers/respuestas).
+## Carruseles: cuadrado o vertical. Una idea clara por slide. Continuidad visual entre carillas.
+
+# ESTILO GENERAL
+Realista · Moderno · Limpio · Profesional pero cercano · Natural · Buena iluminación.
+NO: publicidad barata · imagen de stock · diseño de Canva genérico · flyer corporativo · escena exagerada · texto apilado.
+
+# TIPOGRAFÍA
+Bebas Neue (títulos / frase principal) · DM Sans (cuerpo / texto secundario)
+El texto no tapa la cara. Siempre con buena jerarquía y contraste legible sobre el fondo que surge de la referencia.
+
+# TONO SEGÚN PILAR
+- DOLOR: expresión preocupada, pensativa, de duda
+- TRANSFORMACION: expresión de alivio, seguridad, contraste antes/después
+- AUTORIDAD: mirada firme, postura profesional, datos en pantalla
+- OBJECION: gesto de reconocer la objeción y dar vuelta el argumento
+- FUNDADOR: cercano, natural, detrás de escena`;
+
+function buildBrief(item: ContentItem): string {
+  const tipoLabel = item.tipo === "historia" ? "Historia (9:16 vertical)" : "Carrusel";
+  const pilarLabel = PILAR_CONFIG[item.pilar]?.label ?? item.pilar;
+
+  const lines: string[] = [
+    BRIEF_SYSTEM_PROMPT,
+    "",
+    "---",
+    "",
+    "# PIEZA A CREAR",
+    "",
+    `**Tipo:** ${tipoLabel}`,
+    `**Pilar:** ${pilarLabel}`,
+    `**Fecha publicación:** ${item.fecha_publicacion}`,
+    `**Formato producción:** ${item.formato_produccion ? FORMATO_LABELS[item.formato_produccion] : "Sin definir"}`,
+    "",
+    "## Fórmula narrativa",
+    "",
+    `**HOOK:** ${item.hook ?? "—"}`,
+  ];
+
+  if (item.agitacion)   lines.push(`**AGITACIÓN:** ${item.agitacion}`);
+  if (item.reencuadre)  lines.push(`**REENCUADRE:** ${item.reencuadre}`);
+  if (item.sistema)     lines.push(`**SISTEMA:** ${item.sistema}`);
+  if (item.cta)         lines.push(`**CTA:** ${item.cta}`);
+  if (item.caption)     lines.push("", `**CAPTION COMPLETO:**\n${item.caption}`);
+
+  if (item.descripcion_visual) {
+    lines.push("", "## Descripción visual", "", item.descripcion_visual);
+  }
+
+  if (item.guion) {
+    const label = item.tipo === "historia" ? "## Secuencia de historias" : "## Guión slide a slide";
+    lines.push("", label, "", item.guion);
+  }
+
+  lines.push(
+    "",
+    "---",
+    "",
+    item.tipo === "historia"
+      ? `# INSTRUCCIÓN\n\nOrganizá la secuencia completa de historias. Para CADA historia devolveme:\n\n- Objetivo de la historia\n- Posición del avatar (si aparece)\n- Expresión / sentimiento\n- Objetos visuales en pantalla\n- Texto principal\n- Texto secundario\n- Texto chico o cierre (si aplica)\n- Idea visual general\n- Prompt final para generar la imagen\n\nAntes de generar, confirmá el plan completo.`
+      : `# INSTRUCCIÓN\n\nOrganizá cada slide del carrusel. Para CADA carilla devolveme:\n\n- Objetivo de la carilla\n- Texto principal\n- Texto secundario (si aplica)\n- Visual sugerido\n- Posición del avatar (si aparece)\n- Elementos gráficos\n- Prompt final para generar esa carilla\n\nAntes de generar, confirmá el plan completo.`
+  );
+
+  return lines.join("\n");
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ContentCalendarContent() {
-    const [items, setItems] = useState<ContentItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
-    const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
-    const [referenceDate, setReferenceDate] = useState(new Date());
+  const now = new Date();
+  const [calYear, setCalYear]   = useState(now.getFullYear());
+  const [calMonth, setCalMonth] = useState(now.getMonth());
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-    // New Item State
-    const [newItem, setNewItem] = useState<Partial<ContentItem>>({
-        title: '',
-        type: 'article',
-        status: 'draft',
-        publish_date: new Date().toISOString().split('T')[0],
-        author: 'Nassa',
-        drive_link: '',
-        tags: [],
-        hook: '',
-        copy: '',
-        cta: '',
-        notes: '',
-        week: '',
-        objective: ''
+  const [items, setItems]     = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState("");
+  const [filterTipo, setFilterTipo]   = useState<ContentTipo | "">("");
+  const [filterPilar, setFilterPilar] = useState<ContentPilar | "">("");
+  const [filterEstado, setFilterEstado] = useState<ContentEstado | "">("");
+  const [sortCol, setSortCol] = useState<"fecha_publicacion" | "tipo" | "pilar" | "estado">("fecha_publicacion");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_FORM);
+
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // ── Detail / edit modal ─────────────────────────────────────────────────────
+  const [viewItem,    setViewItem]    = useState<ContentItem | null>(null);
+  const [isEditing,   setIsEditing]   = useState(false);
+  const [isSaving,    setIsSaving]    = useState(false);
+  const [editForm,    setEditForm]    = useState<Partial<ContentItem>>({});
+  const [activeTab,   setActiveTab]   = useState<"contenido" | "produccion" | "brief">("contenido");
+  const [copiedBrief, setCopiedBrief] = useState(false);
+
+  const openDetail = (item: ContentItem) => {
+    setViewItem(item);
+    setEditForm(item);
+    setIsEditing(false);
+    setActiveTab("contenido");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!viewItem) return;
+    setIsSaving(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, created_at: _ca, ...rest } = { ...viewItem, ...editForm };
+      const updated = await updateContentItem(viewItem.id, rest);
+      setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+      setViewItem(updated);
+      setEditForm(updated);
+      setIsEditing(false);
+      toast.success("Pieza actualizada");
+    } catch {
+      toast.error("Error al guardar");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const copyBrief = () => {
+    if (!viewItem) return;
+    navigator.clipboard.writeText(buildBrief(viewItem));
+    setCopiedBrief(true);
+    setTimeout(() => setCopiedBrief(false), 2000);
+  };
+
+  const saveBriefToDb = async () => {
+    if (!viewItem) return;
+    const brief = buildBrief(viewItem);
+    try {
+      const updated = await updateContentItem(viewItem.id, { prompt_imagen: brief });
+      setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+      setViewItem(updated);
+      toast.success("Brief guardado en prompt_imagen");
+    } catch {
+      toast.error("Error al guardar");
+    }
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 15;
+
+  const today = todayStr();
+
+  // ── Data ────────────────────────────────────────────────────────────────────
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getContentCalendarByMonth(calYear, calMonth);
+      setItems(data);
+      setCurrentPage(1);
+    } catch {
+      toast.error("Error al cargar el calendario");
+    } finally {
+      setLoading(false);
+    }
+  }, [calYear, calMonth]);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  // ── Calendar grid ───────────────────────────────────────────────────────────
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+    else setCalMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+    else setCalMonth(m => m + 1);
+  };
+
+  const firstWeekday    = getFirstWeekday(calYear, calMonth);
+  const daysInMonth     = getDaysInMonth(calYear, calMonth);
+  const daysInPrevMonth = getDaysInMonth(calYear, calMonth === 0 ? 11 : calMonth - 1);
+
+  type CalCell = { dateStr: string; day: number; isCurrentMonth: boolean };
+  const cells: CalCell[] = [];
+
+  for (let i = firstWeekday - 1; i >= 0; i--) {
+    const d = daysInPrevMonth - i;
+    const m = calMonth === 0 ? 11 : calMonth - 1;
+    const y = calMonth === 0 ? calYear - 1 : calYear;
+    cells.push({ dateStr: toDateStr(y, m, d), day: d, isCurrentMonth: false });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ dateStr: toDateStr(calYear, calMonth, d), day: d, isCurrentMonth: true });
+  }
+  const remaining = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
+  for (let d = 1; d <= remaining; d++) {
+    const m = calMonth === 11 ? 0 : calMonth + 1;
+    const y = calMonth === 11 ? calYear + 1 : calYear;
+    cells.push({ dateStr: toDateStr(y, m, d), day: d, isCurrentMonth: false });
+  }
+
+  const itemsByDate = items.reduce<Record<string, ContentItem[]>>((acc, item) => {
+    const key = item.fecha_publicacion?.slice(0, 10);
+    if (!key) return acc;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+
+  // ── Reset page on filter change ─────────────────────────────────────────────
+  useEffect(() => { setCurrentPage(1); }, [search, filterTipo, filterPilar, filterEstado, sortCol, sortDir]);
+
+  // ── Table filtering / sorting ───────────────────────────────────────────────
+  const filtered = items
+    .filter(item => {
+      const q = search.toLowerCase();
+      const matchSearch  = !q || item.hook?.toLowerCase().includes(q) || item.cta?.toLowerCase().includes(q) || item.caption?.toLowerCase().includes(q);
+      const matchTipo    = !filterTipo   || item.tipo   === filterTipo;
+      const matchPilar   = !filterPilar  || item.pilar  === filterPilar;
+      const matchEstado  = !filterEstado || item.estado === filterEstado;
+      return matchSearch && matchTipo && matchPilar && matchEstado;
+    })
+    .sort((a, b) => {
+      let av = "";
+      let bv = "";
+      if (sortCol === "fecha_publicacion") { av = a.fecha_publicacion ?? ""; bv = b.fecha_publicacion ?? ""; }
+      if (sortCol === "tipo")   { av = a.tipo  ?? ""; bv = b.tipo  ?? ""; }
+      if (sortCol === "pilar")  { av = a.pilar ?? ""; bv = b.pilar ?? ""; }
+      if (sortCol === "estado") { av = a.estado ?? ""; bv = b.estado ?? ""; }
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
     });
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated   = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await getContentCalendar();
-            setItems(data);
-        } catch (error) {
-            toast.error("Error al cargar el calendario");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  const toggleSort = (col: typeof sortCol) => {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  };
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+  const SortIcon = ({ col }: { col: typeof sortCol }) => {
+    if (sortCol !== col) return <ArrowUpDown className="w-3 h-3 ml-1.5 opacity-30" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="w-3 h-3 ml-1.5 text-primary" />
+      : <ArrowDown className="w-3 h-3 ml-1.5 text-primary" />;
+  };
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+  // ── CRUD ────────────────────────────────────────────────────────────────────
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.hook || !formData.fecha_publicacion) {
+      toast.error("Hook y fecha son obligatorios");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await createContentItem({
+        tipo:               formData.tipo,
+        pilar:              formData.pilar,
+        fecha_publicacion:  formData.fecha_publicacion,
+        estado:             formData.estado,
+        hook:               formData.hook,
+        agitacion:          formData.agitacion     || null,
+        reencuadre:         formData.reencuadre    || null,
+        sistema:            formData.sistema       || null,
+        cta:                formData.cta           || null,
+        caption:            formData.caption       || null,
+        hashtags:           formData.hashtags.length > 0 ? formData.hashtags : null,
+        descripcion_visual: formData.descripcion_visual || null,
+        formato_produccion: formData.formato_produccion || null,
+        guion:              formData.guion         || null,
+        duracion_seg:       formData.duracion_seg  || null,
+        slides:             null,
+        secuencia:          null,
+        imagen_url:         formData.imagen_url    || null,
+        prompt_imagen:      formData.prompt_imagen || null,
+      });
+      toast.success("Pieza creada correctamente");
+      setIsCreateOpen(false);
+      setFormData(EMPTY_FORM);
+      fetchItems();
+    } catch {
+      toast.error("Error al crear la pieza");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-        const fileExt = file.name.split('.').pop()?.toLowerCase();
+  const handleEstadoChange = async (id: string, estado: ContentEstado) => {
+    try {
+      await updateContentEstado(id, estado);
+      setItems(prev => prev.map(i => i.id === id ? { ...i, estado } : i));
+    } catch {
+      toast.error("Error al actualizar el estado");
+    }
+  };
 
-        if (fileExt === 'csv') {
-            Papa.parse(file, {
-                header: true,
-                complete: (results) => {
-                    processImportedData(results.data);
-                },
-                error: (error) => {
-                    toast.error("Error al procesar el CSV: " + error.message);
-                }
-            });
-        } else if (fileExt === 'xlsx' || fileExt === 'xls') {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target?.result as ArrayBuffer);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                processImportedData(jsonData);
-            };
-            reader.readAsArrayBuffer(file);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteContentItem(id);
+      setItems(prev => prev.filter(i => i.id !== id));
+      toast.success("Pieza eliminada");
+    } catch {
+      toast.error("Error al eliminar la pieza");
+    }
+  };
+
+  // ── CSV import ───────────────────────────────────────────────────────────────
+  const parseCSV = (text: string): Record<string, string>[] => {
+    const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().split("\n");
+    if (lines.length < 2) return [];
+
+    const parseRow = (line: string): string[] => {
+      const fields: string[] = [];
+      let cur = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === "," && !inQuotes) {
+          fields.push(cur.trim());
+          cur = "";
         } else {
-            toast.error("Formato de archivo no soportado. Use CSV o Excel.");
+          cur += ch;
         }
-
-        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+      fields.push(cur.trim());
+      return fields;
     };
 
-    const processImportedData = async (data: any[]) => {
-        setLoading(true);
-        const validItems = data.map((row) => ({
-            title: row.title || row.Título || row.titulo,
-            type: (row.type || row.Tipo || row.tipo || 'article').toLowerCase() as ContentType,
-            status: (row.status || row.Estado || row.estado || 'scheduled').toLowerCase() as ContentStatus,
-            publish_date: row.publish_date || row.Fecha || row.fecha || new Date().toISOString(),
-            author: row.author || row.Autor || row.autor || 'Nassa',
-            drive_link: row.drive_link || row.Link || row.link || '',
-            tags: row.tags ? (typeof row.tags === 'string' ? row.tags.split(',') : row.tags) : [],
-            hook: row.hook || row.Gancho || row.hook_text || null,
-            copy: row.copy || row.Cuerpo || row.contenido || row.copy_text || null,
-            cta: row.cta || row.Llamado || row.call_to_action || null,
-            notes: row.notes || row.Notas || row.instrucciones || null,
-            week: row.week || row.Semana || row.s_period || null,
-            objective: row.objective || row.Objetivo || row.dolor || null
-        })).filter(item => item.title);
+    const headers = parseRow(lines[0]).map(h => h.replace(/^"|"$/g, "").trim());
+    return lines.slice(1)
+      .filter(l => l.trim())
+      .map(line => {
+        const values = parseRow(line);
+        return headers.reduce<Record<string, string>>((acc, h, i) => {
+          acc[h] = (values[i] ?? "").replace(/^"|"$/g, "").trim();
+          return acc;
+        }, {});
+      });
+  };
 
-        if (validItems.length > 0) {
-            try {
-                await createMultipleContentItems(validItems);
-                toast.success(`¡Se han importado ${validItems.length} contenidos exitosamente!`);
-                fetchData();
-            } catch (error) {
-                toast.error("Error al guardar los datos importados");
-            }
-        } else {
-            toast.warning("No se encontraron registros válidos para importar.");
-            setLoading(false);
-        }
-    };
+  const VALID_TIPOS   = new Set(["reel", "carrusel", "historia", "post_ig", "post_linkedin"]);
+  const VALID_PILARES = new Set(["DOLOR", "TRANSFORMACION", "AUTORIDAD", "OBJECION", "FUNDADOR"]);
+  const VALID_ESTADOS = new Set(["borrador", "aprobado", "publicado"]);
+  const VALID_FORMATOS = new Set(["cara_camara", "pantalla", "carrusel_diseno", "solo_texto"]);
 
-    const handleCreateManual = async () => {
-        if (!newItem.title) {
-            toast.error("El título es obligatorio");
-            return;
-        }
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
 
-        setLoading(true);
-        try {
-            await createContentItem(newItem as Omit<ContentItem, 'id'>);
-            toast.success("Contenido creado correctamente");
-            setIsNewDialogOpen(false);
-            setNewItem({
-                title: '',
-                type: 'article',
-                status: 'draft',
-                publish_date: new Date().toISOString().split('T')[0],
-                author: 'Nassa',
-                drive_link: '',
-                tags: [],
-                hook: '',
-                copy: '',
-                cta: '',
-                notes: '',
-                week: '',
-                objective: ''
-            });
-            fetchData();
-        } catch (error) {
-            toast.error("Error al crear el contenido");
-            setLoading(false);
-        }
-    };
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
 
-    const toggleStatus = async (id: string, currentStatus: ContentStatus) => {
-        const nextStatus: ContentStatus = currentStatus === 'published' ? 'scheduled' : 'published';
-        try {
-            await updateContentStatus(id, nextStatus);
-            setItems(prev => prev.map(item => item.id === id ? { ...item, status: nextStatus } : item));
-            toast.success(`Estado actualizado a ${nextStatus}`);
-        } catch (error) {
-            toast.error("Error al actualizar el estado");
-        }
-    };
+      if (rows.length === 0) {
+        toast.error("CSV vacío o sin filas válidas");
+        return;
+      }
 
-    const handleDelete = async (id: string) => {
-        try {
-            await deleteContentItem(id);
-            setItems(prev => prev.filter(item => item.id !== id));
-            toast.success("Contenido eliminado");
-        } catch (error) {
-            toast.error("Error al eliminar");
-        }
-    };
+      const errors: string[] = [];
+      const valid: Omit<ContentItem, "id" | "created_at">[] = [];
 
-    const getStartOfWeek = (date: Date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    };
+      rows.forEach((row, idx) => {
+        const n = idx + 2; // row number (1=header)
+        if (!row.tipo || !VALID_TIPOS.has(row.tipo))
+          return errors.push(`Fila ${n}: tipo inválido "${row.tipo}"`);
+        if (!row.pilar || !VALID_PILARES.has(row.pilar))
+          return errors.push(`Fila ${n}: pilar inválido "${row.pilar}"`);
+        if (!row.fecha_publicacion || !/^\d{4}-\d{2}-\d{2}$/.test(row.fecha_publicacion))
+          return errors.push(`Fila ${n}: fecha_publicacion debe ser YYYY-MM-DD`);
+        if (!row.hook)
+          return errors.push(`Fila ${n}: hook es obligatorio`);
 
-    const startOfWeek = getStartOfWeek(referenceDate);
+        valid.push({
+          tipo:               row.tipo as ContentTipo,
+          pilar:              row.pilar as ContentPilar,
+          fecha_publicacion:  row.fecha_publicacion,
+          estado:             (VALID_ESTADOS.has(row.estado) ? row.estado : "borrador") as ContentEstado,
+          hook:               row.hook,
+          agitacion:          row.agitacion          || null,
+          reencuadre:         row.reencuadre         || null,
+          sistema:            row.sistema            || null,
+          cta:                row.cta                || null,
+          caption:            row.caption            || null,
+          hashtags:           row.hashtags ? row.hashtags.split("|").map(h => h.trim()).filter(Boolean) : null,
+          descripcion_visual: row.descripcion_visual || null,
+          formato_produccion: (row.formato_produccion && VALID_FORMATOS.has(row.formato_produccion)
+                                ? row.formato_produccion as ContentFormato : null),
+          guion:              row.guion              || null,
+          duracion_seg:       row.duracion_seg ? parseInt(row.duracion_seg) || null : null,
+          slides:             null,
+          secuencia:          null,
+          imagen_url:         row.imagen_url         || null,
+          prompt_imagen:      row.prompt_imagen      || null,
+        });
+      });
 
-    const navigateWeek = (weeks: number) => {
-        const newDate = new Date(referenceDate);
-        newDate.setDate(newDate.getDate() + weeks * 7);
-        setReferenceDate(newDate);
-    };
+      if (errors.length > 0) {
+        toast.error(
+          <div className="space-y-1">
+            <p className="font-bold">Errores en el CSV ({errors.length})</p>
+            {errors.slice(0, 5).map((e, i) => <p key={i} className="text-xs">{e}</p>)}
+            {errors.length > 5 && <p className="text-xs opacity-60">…y {errors.length - 5} más</p>}
+          </div>,
+          { duration: 8000 }
+        );
+        if (valid.length === 0) return;
+      }
 
-    const daysLabels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      if (valid.length === 0) return;
 
-    return (
-        <div className="space-y-8 pb-10">
-            <TooltipProvider>
-                {/* Header Actions */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                            <CalendarIcon className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight">Calendario de Contenidos</h2>
-                            <div className="flex items-center gap-2 mt-1">
-                                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-muted" onClick={() => navigateWeek(-1)}>
-                                    <ChevronLeft className="w-4 h-4" />
-                                </Button>
-                                <p className="text-sm font-bold text-primary px-1">
-                                    Semana del {startOfWeek.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
-                                </p>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-muted" onClick={() => navigateWeek(1)}>
-                                    <ChevronRight className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+      await createMultipleContentItems(valid);
+      toast.success(`${valid.length} pieza${valid.length > 1 ? "s" : ""} importada${valid.length > 1 ? "s" : ""} correctamente`);
+      fetchItems();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      toast.error(`Error al importar: ${msg}`);
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-xl text-muted-foreground hover:text-primary"
-                            onClick={() => setIsHelpDialogOpen(true)}
-                        >
-                            <HelpCircle className="w-5 h-5" />
-                        </Button>
+  // ─── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <TooltipProvider>
+      <div className="space-y-8 pb-10">
 
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            accept=".csv,.xlsx,.xls"
-                            className="hidden"
-                        />
-                        <Button
-                            variant="outline"
-                            className="rounded-xl gap-2 border-border/50 h-11"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={loading}
-                        >
-                            <Upload className="w-4 h-4" />
-                            Importar
-                        </Button>
+        {/* ── Calendar ───────────────────────────────────────────────────────── */}
+        <div className="space-y-4">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={prevMonth}
+                className="w-9 h-9 rounded-xl border border-border bg-card hover:bg-muted transition-colors flex items-center justify-center"
+              >
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <div className="min-w-[180px] text-center">
+                <span className="text-xl font-bold text-foreground tracking-tight">
+                  {MONTH_NAMES[calMonth]}
+                </span>
+                <span className="ml-2 text-xl font-light text-muted-foreground/60">
+                  {calYear}
+                </span>
+              </div>
+              <button
+                onClick={nextMonth}
+                className="w-9 h-9 rounded-xl border border-border bg-card hover:bg-muted transition-colors flex items-center justify-center"
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
 
-                        <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="rounded-xl gap-2 shadow-lg shadow-primary/20 h-11">
-                                    <Plus className="w-4 h-4" />
-                                    Nuevo Contenido
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[600px] rounded-[32px] max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle className="text-xl font-bold">Crear Contenido</DialogTitle>
-                                    <DialogDescription>
-                                        Añade una nueva pieza de contenido de forma manual.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="title" className="font-bold">Título</Label>
-                                        <Input
-                                            id="title"
-                                            placeholder="Ej: Las 5 mejores IAs..."
-                                            className="rounded-xl"
-                                            value={newItem.title}
-                                            onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label className="font-bold">Tipo</Label>
-                                            <Select
-                                                value={newItem.type}
-                                                onValueChange={(val) => setNewItem({ ...newItem, type: val as ContentType })}
-                                            >
-                                                <SelectTrigger className="rounded-xl">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-xl">
-                                                    <SelectItem value="video">Video</SelectItem>
-                                                    <SelectItem value="carousel">Carrusel</SelectItem>
-                                                    <SelectItem value="image">Imagen</SelectItem>
-                                                    <SelectItem value="article">Artículo</SelectItem>
-                                                    <SelectItem value="thread">Hilo/Thread</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label className="font-bold">Fecha</Label>
-                                            <Input
-                                                type="date"
-                                                className="rounded-xl"
-                                                value={newItem.publish_date}
-                                                onChange={(e) => setNewItem({ ...newItem, publish_date: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="week" className="font-bold text-xs uppercase text-muted-foreground">Semana</Label>
-                                            <Select
-                                                value={newItem.week || ''}
-                                                onValueChange={(val) => setNewItem({ ...newItem, week: val })}
-                                            >
-                                                <SelectTrigger className="rounded-xl">
-                                                    <SelectValue placeholder="S1, S2..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-xl">
-                                                    <SelectItem value="S1">Semana 1 (S1)</SelectItem>
-                                                    <SelectItem value="S2">Semana 2 (S2)</SelectItem>
-                                                    <SelectItem value="S3">Semana 3 (S3)</SelectItem>
-                                                    <SelectItem value="S4">Semana 4 (S4)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="objective" className="font-bold text-xs uppercase text-muted-foreground">Objetivo</Label>
-                                            <Select
-                                                value={newItem.objective || ''}
-                                                onValueChange={(val) => setNewItem({ ...newItem, objective: val })}
-                                            >
-                                                <SelectTrigger className="rounded-xl">
-                                                    <SelectValue placeholder="Dolor, Educación..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-xl">
-                                                    <SelectItem value="Dolor">Dolor / Problema</SelectItem>
-                                                    <SelectItem value="Educación">Educativo / Valor</SelectItem>
-                                                    <SelectItem value="Prueba Social">Prueba Social</SelectItem>
-                                                    <SelectItem value="Venta">Venta Directa</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="hook" className="font-bold text-xs uppercase text-muted-foreground">Hook (Primera línea)</Label>
-                                        <Input
-                                            id="hook"
-                                            placeholder="El gancho que detendrá el scroll..."
-                                            className="rounded-xl"
-                                            value={newItem.hook || ''}
-                                            onChange={(e) => setNewItem({ ...newItem, hook: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="copy" className="font-bold text-xs uppercase text-muted-foreground">Cuerpo del Post (Copy)</Label>
-                                        <Textarea
-                                            id="copy"
-                                            placeholder="Escribe el contenido completo aquí..."
-                                            className="rounded-xl min-h-[120px]"
-                                            value={newItem.copy || ''}
-                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewItem({ ...newItem, copy: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="cta" className="font-bold text-xs uppercase text-muted-foreground">CTA</Label>
-                                            <Input
-                                                id="cta"
-                                                placeholder="Link en bio, Comenta IA..."
-                                                className="rounded-xl"
-                                                value={newItem.cta || ''}
-                                                onChange={(e) => setNewItem({ ...newItem, cta: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="link" className="font-bold text-xs uppercase text-muted-foreground">Link Drive</Label>
-                                            <Input
-                                                id="link"
-                                                placeholder="https://drive..."
-                                                className="rounded-xl"
-                                                value={newItem.drive_link || ''}
-                                                onChange={(e) => setNewItem({ ...newItem, drive_link: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="notes" className="font-bold text-xs uppercase text-muted-foreground">Instrucciones / Notas</Label>
-                                        <Textarea
-                                            id="notes"
-                                            placeholder="Detalles para el diseñador o editor..."
-                                            className="rounded-xl min-h-[80px]"
-                                            value={newItem.notes || ''}
-                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewItem({ ...newItem, notes: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button variant="ghost" onClick={() => setIsNewDialogOpen(false)} className="rounded-xl font-bold">Cancelar</Button>
-                                    <Button onClick={handleCreateManual} disabled={loading} className="rounded-xl font-bold shadow-lg shadow-primary/20">
-                                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Guardar Contenido
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              {Object.entries(TIPO_CONFIG).map(([tipo, cfg]) => (
+                <div key={tipo} className="flex items-center gap-1.5">
+                  <div className={cn("w-2 h-2 rounded-full", cfg.dot)} />
+                  <span className="text-xs font-medium text-muted-foreground">{cfg.label}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                {/* Weekly View - Scrollable */}
-                <div className="overflow-x-auto pb-6 -mx-4 px-4 scrollbar-medium">
-                    <div className="flex gap-5 min-w-max">
-                        {daysLabels.map((day, idx) => {
-                            const currentDayDate = new Date(startOfWeek);
-                            currentDayDate.setDate(startOfWeek.getDate() + idx);
-                            const dateString = currentDayDate.toISOString().split('T')[0];
+          {/* Calendar Grid */}
+          <div className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-sm">
+            <div className="grid grid-cols-7 border-b border-border/60">
+              {DAY_LABELS.map(label => (
+                <div key={label} className="py-3 text-center text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                  {label}
+                </div>
+              ))}
+            </div>
 
-                            const dayItems = items.filter(item => {
-                                // Extract just the date part for comparison
-                                const itemDateStr = new Date(item.publish_date).toISOString().split('T')[0];
-                                return itemDateStr === dateString;
-                            });
+            <div className="grid grid-cols-7">
+              {cells.map((cell, idx) => {
+                const isToday    = cell.dateStr === today;
+                const isSelected = cell.dateStr === selectedDay;
+                const dots       = itemsByDate[cell.dateStr] ?? [];
+                const isLastRow  = idx >= cells.length - 7;
+                const isLastCol  = (idx + 1) % 7 === 0;
 
-                            return (
-                                <div key={day} className="flex flex-col gap-4 w-[320px]">
-                                    <div className="flex items-center justify-between px-2">
-                                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">
-                                            {day}
-                                        </span>
-                                        <span className="text-[10px] font-bold text-primary/40 italic">
-                                            {currentDayDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
-                                        </span>
-                                    </div>
+                return (
+                  <button
+                    key={`${cell.dateStr}-${idx}`}
+                    onClick={() => setSelectedDay(cell.dateStr === selectedDay ? null : cell.dateStr)}
+                    className={cn(
+                      "relative min-h-[90px] p-2.5 flex flex-col gap-1 text-left transition-colors",
+                      "border-b border-r border-border/40",
+                      isLastRow && "border-b-0",
+                      isLastCol && "border-r-0",
+                      !cell.isCurrentMonth && "bg-muted/20",
+                      cell.isCurrentMonth && "hover:bg-muted/30",
+                      isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/20",
+                    )}
+                  >
+                    <span className={cn(
+                      "w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold transition-colors",
+                      isToday
+                        ? "bg-primary text-primary-foreground"
+                        : cell.isCurrentMonth
+                          ? "text-foreground/80"
+                          : "text-muted-foreground/25",
+                    )}>
+                      {cell.day}
+                    </span>
 
-                                    <div className="min-h-[300px] rounded-[32px] bg-muted/20 border border-dashed border-border/50 p-4 flex flex-col gap-4">
-                                        {loading && items.length === 0 ? (
-                                            <div className="flex-1 flex items-center justify-center">
-                                                <Loader2 className="w-8 h-8 animate-spin text-primary/20" />
-                                            </div>
-                                        ) : dayItems.map(item => (
-                                            <Card
-                                                key={item.id}
-                                                className="p-5 rounded-[24px] bg-card border-border/30 shadow-sm hover:shadow-lg transition-all group relative overflow-hidden"
-                                            >
-                                                <div className={cn("absolute left-0 top-0 bottom-0 w-1.5",
-                                                    item.status === 'published' ? "bg-emerald-500" :
-                                                        item.status === 'scheduled' ? "bg-blue-500" :
-                                                            item.status === 'draft' ? "bg-amber-500" : "bg-slate-400"
-                                                )} />
-
-                                                <div className="space-y-4">
-                                                    <div className="flex items-start justify-between">
-                                                        <Badge variant="outline" className={cn("rounded-lg px-2 py-0 h-5 text-[10px] font-bold uppercase", STATUS_COLORS[item.status])}>
-                                                            {item.status}
-                                                        </Badge>
-                                                        <div className="flex gap-1">
-                                                            <button onClick={() => toggleStatus(item.id, item.status)} className="text-muted-foreground/30 hover:text-emerald-500 transition-colors">
-                                                                {item.status === 'published' ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <Circle className="w-5 h-5" />}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <h3 className="text-[15px] font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                                                        {item.title}
-                                                    </h3>
-
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">
-                                                                {item.author[0]}
-                                                            </div>
-                                                            <span className="text-[12px] font-medium text-muted-foreground">{item.author}</span>
-                                                        </div>
-
-                                                        <div className="flex items-center gap-1">
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <div className="text-muted-foreground/40">
-                                                                        {TYPE_ICONS[item.type]}
-                                                                    </div>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent className="rounded-lg text-[10px] uppercase font-bold">
-                                                                    {item.type}
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </div>
-                                                    </div>
-
-                                                    {item.drive_link && (
-                                                        <div className="pt-3 border-t border-border/50 flex items-center justify-between">
-                                                            <a
-                                                                href={item.drive_link}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-[11px] flex items-center gap-1.5 font-bold text-primary hover:underline uppercase tracking-tight"
-                                                            >
-                                                                <ExternalLink className="w-3.5 h-3.5" />
-                                                                Google Drive
-                                                            </a>
-
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <MoreHorizontal className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="rounded-xl">
-                                                                    <DropdownMenuItem className="gap-2 text-xs font-semibold focus:text-primary">
-                                                                        <Share2 className="w-4 h-4" /> Compartir
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        className="gap-2 text-xs font-semibold text-destructive focus:text-destructive"
-                                                                        onClick={() => handleDelete(item.id)}
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4" /> Eliminar
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </Card>
-                                        ))}
-
-                                        {dayItems.length === 0 && !loading && (
-                                            <div className="flex-1 flex items-center justify-center">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => {
-                                                        setIsNewDialogOpen(true);
-                                                        // Set the date to something related to the day index if possible
-                                                    }}
-                                                    className="h-10 w-10 rounded-full border border-dashed border-border/50 text-muted-foreground/20 hover:text-primary hover:border-primary transition-all"
-                                                >
-                                                    <Plus className="w-5 h-5" />
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
+                    {dots.length > 0 && (
+                      <div className="flex flex-col gap-0.5 w-full">
+                        {dots.slice(0, 3).map((item, i) => {
+                          const cfg = TIPO_CONFIG[item.tipo];
+                          return (
+                            <div key={i} className={cn(
+                              "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold truncate",
+                              cfg.color,
+                            )}>
+                              {cfg.icon}
+                              <span className="truncate">{truncate(item.hook, 30)}</span>
+                            </div>
+                          );
                         })}
-                    </div>
-                </div>
-
-                {/* Info Card - Simplified */}
-                <div className="bg-primary/5 rounded-[32px] p-8 border border-primary/10 flex items-start gap-6">
-                    <AlertCircle className="w-8 h-8 text-primary shrink-0" />
-                    <div className="space-y-2">
-                        <h4 className="text-[17px] font-bold text-primary">Operativa del Calendario</h4>
-                        <p className="text-sm text-foreground/70 leading-relaxed max-w-3xl">
-                            Los contenidos se sincronizan en tiempo real con Supabase. Puedes marcarlos como publicados directamente desde el calendario
-                            o usar el backlog para una gestión en masa. La visualización se agrupa automáticamente por día de la semana.
-                        </p>
-                    </div>
-                </div>
-
-                {/* Content Backlog - Real Data */}
-                <div className="bg-card rounded-[32px] border border-border/30 overflow-hidden shadow-sm">
-                    <div className="px-8 py-6 border-b border-border/30 flex items-center justify-between">
-                        <h3 className="text-lg font-bold tracking-tight">Pipeline de Producción (Backlog)</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-muted-foreground/50 mr-2">{items.length} registros</span>
-                            <Button variant="ghost" size="sm" className="rounded-xl gap-2 text-xs font-bold hover:bg-muted h-9">
-                                <Filter className="w-3.5 h-3.5" />
-                                Filtrar
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="p-0 overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-muted/30 border-b border-border/30">
-                                    <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">Título</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40">Tipo</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40 text-center">Estado</th>
-                                    <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40 text-center">Fecha de Publicación</th>
-                                    <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/40 text-right">Drive</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading && items.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="py-20 text-center">
-                                            <Loader2 className="w-8 h-8 animate-spin text-primary/20 mx-auto" />
-                                        </td>
-                                    </tr>
-                                ) : items.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="py-20 text-center text-muted-foreground/40 italic">No hay contenidos registrados.</td>
-                                    </tr>
-                                ) : items.map(item => (
-                                    <tr key={item.id} className="border-b border-border/20 last:border-0 hover:bg-muted/5 transition-colors group">
-                                        <td className="px-8 py-5 text-[14px] font-bold text-foreground/85">{item.title}</td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 text-muted-foreground/60">
-                                                {TYPE_ICONS[item.type]}
-                                                <span className="text-[12px] font-semibold capitalize">{item.type}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-center">
-                                            <Badge variant="outline" className={cn("rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase h-6", STATUS_COLORS[item.status])}>
-                                                {item.status}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-6 py-5 text-center text-[12px] font-bold text-muted-foreground/50">
-                                            {new Date(item.publish_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                        </td>
-                                        <td className="px-8 py-5 text-right">
-                                            {item.drive_link ? (
-                                                <a href={item.drive_link} target="_blank" rel="noopener noreferrer" className="p-2 inline-flex rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all">
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            ) : '-'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Help Dialog */}
-                <Dialog open={isHelpDialogOpen} onOpenChange={setIsHelpDialogOpen}>
-                    <DialogContent className="sm:max-w-[550px] rounded-[32px] overflow-hidden p-0 border-none shadow-2xl">
-                        <div className="bg-primary p-8 text-white">
-                            <DialogTitle className="text-2xl font-bold flex items-center gap-3 mb-2">
-                                <HelpCircle className="w-8 h-8 opacity-50" />
-                                Guía de Importación
-                            </DialogTitle>
-                            <p className="text-primary-foreground/70 text-sm">
-                                Configura tu archivo para una sincronización perfecta con el calendario.
-                            </p>
-                        </div>
-
-                        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin">
-                            <div className="space-y-4">
-                                <h4 className="font-bold text-foreground flex items-center gap-2 text-base">
-                                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-black">1</div>
-                                    Columnas y Valores
-                                </h4>
-                                <div className="grid gap-3 pl-8">
-                                    {[
-                                        { col: 'title', desc: 'Título del post', ex: '"IA para Agencias"' },
-                                        { col: 'hook', desc: 'Primera línea (Hook)', ex: '"Tu empresa está frenada..."' },
-                                        { col: 'copy', desc: 'Contenido completo', ex: '"Cuerpo del post..."' },
-                                        { col: 'cta', desc: 'Llamado a la acción', ex: '"Comenta IA"' },
-                                        { col: 'type', desc: 'video, carousel, thread, article', ex: 'video' },
-                                        { col: 'status', desc: 'draft, scheduled, published', ex: 'scheduled' },
-                                        { col: 'publish_date', desc: 'Formato: AAAA-MM-DD', ex: '2024-03-25' },
-                                        { col: 'week', desc: 'S1, S2, S3, S4', ex: 'S1' },
-                                        { col: 'objective', desc: 'Dolor, Educación, Prueba...', ex: 'Dolor' },
-                                    ].map((field) => (
-                                        <div key={field.col} className="flex flex-col gap-1 pb-2 border-b border-border/50 last:border-none">
-                                            <div className="flex items-center justify-between">
-                                                <code className="text-[12px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-md uppercase tracking-tighter">{field.col}</code>
-                                                <span className="text-[10px] text-muted-foreground italic">Ej: {field.ex}</span>
-                                            </div>
-                                            <p className="text-[13px] text-muted-foreground/80 font-medium">{field.desc}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="font-bold text-foreground flex items-center gap-2 text-base">
-                                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-black">2</div>
-                                    Ejemplo de CSV (Raw)
-                                </h4>
-                                <div className="bg-muted/50 p-4 rounded-2xl border border-border/50 font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre">
-                                    {`title,type,status,publish_date,drive_link
-"Mi Gran Post",video,scheduled,2024-03-20,https://drive...
-"Estrategia IA",thread,draft,2024-03-22,https://drive...`}
-                                </div>
-                            </div>
-
-                            <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
-                                <h4 className="font-bold text-primary flex items-center gap-2 text-sm">
-                                    <BookOpen className="w-4 h-4" />
-                                    Plantilla Maestra
-                                </h4>
-                                <p className="text-[12px] text-muted-foreground leading-relaxed">
-                                    Hemos preparado una estructura optimizada en Google Sheets para que planifiques tus Sprints de contenido.
-                                </p>
-                                <Button variant="outline" className="w-full rounded-xl bg-white border-primary/20 text-primary font-bold gap-2 text-xs" asChild>
-                                    <a href="https://docs.google.com/spreadsheets/d/1_YOUR_TEMPLATE_ID_HERE/copy" target="_blank" rel="noopener noreferrer">
-                                        <Download className="w-3.5 h-3.5" />
-                                        Abrir Plantilla en Google Sheets
-                                    </a>
-                                </Button>
-                            </div>
-
-                            <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                                <AlertCircle className="w-6 h-6 text-amber-500 shrink-0" />
-                                <p className="text-[12px] text-amber-800 font-medium leading-relaxed">
-                                    <b>Nota Importante:</b> Si usas comillas en el título del contenido DENTRO del CSV, asegúrate de que el archivo esté bien delimitado para evitar errores de lectura.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="p-6 bg-muted/20 border-t border-border/30">
-                            <Button onClick={() => setIsHelpDialogOpen(false)} className="rounded-xl w-full font-bold h-12 shadow-lg shadow-primary/20">
-                                ¡Entendido, vamos a publicar!
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-            </TooltipProvider>
+                        {dots.length > 3 && (
+                          <span className="text-[9px] text-muted-foreground/50 font-medium pl-1">
+                            +{dots.length - 3} más
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-    );
+
+        {/* ── Table Section ──────────────────────────────────────────────────── */}
+        <div className="bg-card rounded-[24px] shadow-sm border border-border/30 overflow-hidden">
+
+          {/* Header + Filters */}
+          <div className="px-8 py-5 border-b border-border/30 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h2 className="text-[16px] font-bold text-foreground/80 tracking-tight">
+                  Piezas de Contenido
+                </h2>
+                <span className="text-[13px] font-medium text-muted-foreground/40">
+                  {filtered.length} registros
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* CSV import */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={handleImport}
+                />
+                <Button
+                  variant="outline"
+                  className="rounded-full h-10 px-5 gap-2 text-[13px] font-semibold border-border/60 hover:bg-muted/50"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                >
+                  {isImporting
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <Upload className="w-4 h-4" />}
+                  {isImporting ? "Importando…" : "Importar CSV"}
+                </Button>
+
+              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogTrigger asChild>
+                  <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[13px] px-6 h-10 gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                    <Plus className="w-4 h-4" />
+                    Nueva Pieza
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[540px] rounded-[32px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-8">
+                  <DialogHeader className="mb-6">
+                    <DialogTitle className="text-2xl font-bold tracking-tight text-foreground/90">
+                      Nueva Pieza
+                    </DialogTitle>
+                    <DialogDescription className="text-muted-foreground/60 font-medium">
+                      Hook y fecha son obligatorios. El resto puede completarse después.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <form onSubmit={handleCreate} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Tipo */}
+                      <div className="grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Tipo *</Label>
+                        <Select
+                          value={formData.tipo}
+                          onValueChange={v => setFormData({ ...formData, tipo: v as ContentTipo })}
+                        >
+                          <SelectTrigger className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {Object.entries(TIPO_CONFIG).map(([v, c]) => (
+                              <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Pilar */}
+                      <div className="grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Pilar *</Label>
+                        <Select
+                          value={formData.pilar}
+                          onValueChange={v => setFormData({ ...formData, pilar: v as ContentPilar })}
+                        >
+                          <SelectTrigger className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {Object.entries(PILAR_CONFIG).map(([v, c]) => (
+                              <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Fecha */}
+                      <div className="grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Fecha publicación *</Label>
+                        <Input
+                          type="date"
+                          required
+                          className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]"
+                          value={formData.fecha_publicacion}
+                          onChange={e => setFormData({ ...formData, fecha_publicacion: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Estado */}
+                      <div className="grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Estado</Label>
+                        <Select
+                          value={formData.estado}
+                          onValueChange={v => setFormData({ ...formData, estado: v as ContentEstado })}
+                        >
+                          <SelectTrigger className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {Object.entries(ESTADO_CONFIG).map(([v, c]) => (
+                              <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Hook */}
+                      <div className="col-span-2 grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Hook *</Label>
+                        <Textarea
+                          required
+                          placeholder="Primera línea que detiene el scroll…"
+                          className="bg-muted/30 border-none rounded-2xl px-4 py-3 font-medium text-[13px] resize-none min-h-[72px]"
+                          value={formData.hook}
+                          onChange={e => setFormData({ ...formData, hook: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Agitación */}
+                      <div className="col-span-2 grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Agitación</Label>
+                        <Textarea
+                          placeholder="Describe el ciclo de dolor con detalle concreto…"
+                          className="bg-muted/30 border-none rounded-2xl px-4 py-3 font-medium text-[13px] resize-none min-h-[60px]"
+                          value={formData.agitacion}
+                          onChange={e => setFormData({ ...formData, agitacion: e.target.value })}
+                        />
+                      </div>
+
+                      {/* CTA */}
+                      <div className="col-span-2 grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">CTA</Label>
+                        <Input
+                          placeholder="Ej: Agendá un diagnóstico gratuito"
+                          className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]"
+                          value={formData.cta}
+                          onChange={e => setFormData({ ...formData, cta: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Formato producción */}
+                      <div className="grid gap-2">
+                        <Label className="text-[13px] font-bold text-foreground/70 ml-1">Formato producción</Label>
+                        <Select
+                          value={formData.formato_produccion ?? "none"}
+                          onValueChange={v => setFormData({ ...formData, formato_produccion: v === "none" ? null : v as ContentFormato })}
+                        >
+                          <SelectTrigger className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]">
+                            <SelectValue placeholder="Sin definir" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="none">Sin definir</SelectItem>
+                            {Object.entries(FORMATO_LABELS).map(([v, l]) => (
+                              <SelectItem key={v} value={v}>{l}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Duración (solo reels) */}
+                      {formData.tipo === "reel" && (
+                        <div className="grid gap-2">
+                          <Label className="text-[13px] font-bold text-foreground/70 ml-1">Duración (seg)</Label>
+                          <Input
+                            type="number"
+                            min={10}
+                            max={90}
+                            placeholder="Ej: 45"
+                            className="h-11 bg-muted/30 border-none rounded-2xl px-4 font-medium text-[13px]"
+                            value={formData.duracion_seg ?? ""}
+                            onChange={e => setFormData({ ...formData, duracion_seg: e.target.value ? parseInt(e.target.value) : null })}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <DialogFooter className="pt-4">
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[15px] shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Creando…
+                          </div>
+                        ) : "Crear Pieza"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              </div>
+            </div>
+
+            {/* Filters row */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <Input
+                  placeholder="Buscar por hook, CTA, caption…"
+                  className="pl-11 bg-muted/30 border-none shadow-none rounded-2xl h-11 text-[13px]"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+
+              <Select value={filterTipo || "all"} onValueChange={v => setFilterTipo(v === "all" ? "" : v as ContentTipo)}>
+                <SelectTrigger className="w-[150px] bg-muted/10 border border-border/50 shadow-none rounded-2xl h-11 text-[13px] font-medium">
+                  <SelectValue placeholder="Todos los tipos" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  {Object.entries(TIPO_CONFIG).map(([v, c]) => (
+                    <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterPilar || "all"} onValueChange={v => setFilterPilar(v === "all" ? "" : v as ContentPilar)}>
+                <SelectTrigger className="w-[150px] bg-muted/10 border border-border/50 shadow-none rounded-2xl h-11 text-[13px] font-medium">
+                  <SelectValue placeholder="Todos los pilares" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="all">Todos los pilares</SelectItem>
+                  {Object.entries(PILAR_CONFIG).map(([v, c]) => (
+                    <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterEstado || "all"} onValueChange={v => setFilterEstado(v === "all" ? "" : v as ContentEstado)}>
+                <SelectTrigger className="w-[150px] bg-muted/10 border border-border/50 shadow-none rounded-2xl h-11 text-[13px] font-medium">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  {Object.entries(ESTADO_CONFIG).map(([v, c]) => (
+                    <SelectItem key={v} value={v}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Table */}
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-border/30">
+                <TableHead
+                  className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest pl-8 h-12 cursor-pointer hover:text-foreground/60 transition-colors"
+                  onClick={() => toggleSort("fecha_publicacion")}
+                >
+                  <div className="flex items-center">Fecha <SortIcon col="fecha_publicacion" /></div>
+                </TableHead>
+
+                <TableHead
+                  className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest h-12 cursor-pointer hover:text-foreground/60 transition-colors"
+                  onClick={() => toggleSort("tipo")}
+                >
+                  <div className="flex items-center">Tipo <SortIcon col="tipo" /></div>
+                </TableHead>
+
+                <TableHead
+                  className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest h-12 cursor-pointer hover:text-foreground/60 transition-colors"
+                  onClick={() => toggleSort("pilar")}
+                >
+                  <div className="flex items-center">Pilar <SortIcon col="pilar" /></div>
+                </TableHead>
+
+                <TableHead className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest h-12">
+                  Hook
+                </TableHead>
+
+                <TableHead className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest h-12">
+                  CTA
+                </TableHead>
+
+                <TableHead
+                  className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest h-12 text-center cursor-pointer hover:text-foreground/60 transition-colors"
+                  onClick={() => toggleSort("estado")}
+                >
+                  <div className="flex items-center justify-center">Estado <SortIcon col="estado" /></div>
+                </TableHead>
+
+                <TableHead className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest text-right pr-8 h-12">
+                  Acciones
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary/30" />
+                      <span className="text-sm font-medium text-muted-foreground/40">Cargando…</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <FileEdit className="w-8 h-8 text-muted-foreground/20" />
+                      <span className="text-sm font-medium text-muted-foreground/40">
+                        {items.length === 0
+                          ? "Todavía no hay piezas. Creá la primera."
+                          : "Sin resultados para los filtros aplicados."}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginated.map(item => {
+                  const tipoCfg   = TIPO_CONFIG[item.tipo];
+                  const pilarCfg  = PILAR_CONFIG[item.pilar];
+                  const estadoCfg = ESTADO_CONFIG[item.estado];
+
+                  return (
+                    <TableRow
+                      key={item.id}
+                      onClick={() => openDetail(item)}
+                      className="group hover:bg-muted/20 border-b border-border/20 last:border-0 transition-colors cursor-pointer"
+                    >
+                      {/* Fecha */}
+                      <TableCell className="pl-8 py-4 whitespace-nowrap">
+                        <span className="text-[13px] font-semibold text-foreground/70">
+                          {item.fecha_publicacion
+                            ? new Date(item.fecha_publicacion + "T00:00:00").toLocaleDateString("es-AR", {
+                                day: "2-digit", month: "2-digit", year: "numeric",
+                              })
+                            : "-"}
+                        </span>
+                      </TableCell>
+
+                      {/* Tipo */}
+                      <TableCell>
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight",
+                          tipoCfg.color,
+                        )}>
+                          {tipoCfg.icon}
+                          {tipoCfg.label}
+                        </div>
+                      </TableCell>
+
+                      {/* Pilar */}
+                      <TableCell>
+                        <div className={cn(
+                          "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight",
+                          pilarCfg.color,
+                        )}>
+                          {pilarCfg.label}
+                        </div>
+                      </TableCell>
+
+                      {/* Hook */}
+                      <TableCell className="max-w-[260px]">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-[12px] font-medium text-foreground/70 truncate cursor-help">
+                              {truncate(item.hook, 65)}
+                            </p>
+                          </TooltipTrigger>
+                          {item.hook && item.hook.length > 65 && (
+                            <TooltipContent className="max-w-[320px] bg-card border border-border shadow-lg p-3 rounded-xl">
+                              <p className="text-[12px] font-medium text-foreground/90 leading-relaxed">
+                                {item.hook}
+                              </p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TableCell>
+
+                      {/* CTA */}
+                      <TableCell className="max-w-[180px]">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-[11px] font-medium text-muted-foreground/60 cursor-help truncate block">
+                              {truncate(item.cta, 40)}
+                            </span>
+                          </TooltipTrigger>
+                          {item.cta && item.cta.length > 40 && (
+                            <TooltipContent className="max-w-[280px] bg-card border border-border shadow-lg p-3 rounded-xl">
+                              <p className="text-[12px] font-medium text-foreground/90">{item.cta}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TableCell>
+
+                      {/* Estado */}
+                      <TableCell className="text-center" onClick={e => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className={cn(
+                                "rounded-full h-7 px-3 gap-1.5 border-none shadow-none text-[10px] font-bold uppercase tracking-tight",
+                                estadoCfg.styles,
+                              )}
+                            >
+                              {estadoCfg.label}
+                              <ChevronDown className="w-3 h-3 opacity-50" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="center" className="w-[150px] rounded-xl border-border/50 shadow-lg">
+                            {Object.entries(ESTADO_CONFIG).map(([value, cfg]) => (
+                              <DropdownMenuItem
+                                key={value}
+                                className="text-[11px] font-semibold h-9 px-4 focus:bg-primary/5 focus:text-primary cursor-pointer"
+                                onClick={() => handleEstadoChange(item.id, value as ContentEstado)}
+                              >
+                                {cfg.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+
+                      {/* Acciones */}
+                      <TableCell className="text-right pr-8" onClick={e => e.stopPropagation()}>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg bg-muted/40 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-[24px] border-border/50">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-[16px] font-bold">
+                                ¿Eliminar pieza?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-[13px] text-muted-foreground/70">
+                                Se eliminará esta pieza permanentemente. Esta acción no se puede deshacer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl h-10 text-[13px] font-semibold">
+                                Cancelar
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                className="rounded-xl h-10 text-[13px] font-semibold bg-rose-500 hover:bg-rose-600 text-white"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Footer + Paginado */}
+          {!loading && items.length > 0 && (
+            <div className="px-8 py-4 border-t border-border/30 bg-muted/5 flex items-center justify-between flex-wrap gap-3">
+              {/* Izquierda: conteo + badges de estado */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[12px] font-medium text-muted-foreground/50">
+                  {filtered.length === items.length
+                    ? `${items.length} piezas · ${MONTH_NAMES[calMonth]} ${calYear}`
+                    : `${filtered.length} de ${items.length} piezas`}
+                </span>
+                {Object.entries(ESTADO_CONFIG).map(([estado, cfg]) => {
+                  const count = items.filter(i => i.estado === estado).length;
+                  if (!count) return null;
+                  return (
+                    <div key={estado} className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-full",
+                      cfg.styles,
+                    )}>
+                      {cfg.label} · {count}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Derecha: controles de paginado */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="w-8 h-8 rounded-lg border border-border/50 bg-card flex items-center justify-center text-muted-foreground hover:bg-muted/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[12px] font-semibold text-muted-foreground/60 min-w-[80px] text-center">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="w-8 h-8 rounded-lg border border-border/50 bg-card flex items-center justify-center text-muted-foreground hover:bg-muted/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {/* ── Detail / Edit Modal ──────────────────────────────────────────────── */}
+      <Dialog open={!!viewItem} onOpenChange={open => { if (!open) setViewItem(null); }}>
+        <DialogContent className="max-w-5xl w-[90vw] rounded-[28px] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+          <DialogTitle className="sr-only">
+            {viewItem ? `${TIPO_CONFIG[viewItem.tipo].label} — ${viewItem.hook}` : "Detalle de pieza"}
+          </DialogTitle>
+
+          {viewItem && (() => {
+            const tipoCfg  = TIPO_CONFIG[viewItem.tipo];
+            const pilarCfg = PILAR_CONFIG[viewItem.pilar];
+            const canBrief = viewItem.tipo === "carrusel" || viewItem.tipo === "historia";
+            const ef       = editForm;
+
+            const Field = ({ label, value, field, multiline = false }: {
+              label: string; value: string | null | undefined;
+              field: keyof ContentItem; multiline?: boolean;
+            }) => isEditing ? (
+              multiline
+                ? <div className="grid gap-1.5">
+                    <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">{label}</span>
+                    <Textarea
+                      className="bg-muted/30 border-none rounded-xl px-3 py-2 text-[13px] resize-none min-h-[72px]"
+                      value={(ef[field] as string) ?? ""}
+                      onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))}
+                    />
+                  </div>
+                : <div className="grid gap-1.5">
+                    <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">{label}</span>
+                    <input
+                      className="bg-muted/30 border-none rounded-xl px-3 h-10 text-[13px] w-full outline-none"
+                      value={(ef[field] as string) ?? ""}
+                      onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))}
+                    />
+                  </div>
+            ) : (
+              <div className="grid gap-1">
+                <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">{label}</span>
+                <p className="text-[13px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                  {value ? value.replace(/\\n/g, "\n") : <span className="text-muted-foreground/30 italic">—</span>}
+                </p>
+              </div>
+            );
+
+            return (
+              <>
+                {/* Header */}
+                <div className="px-8 pt-7 pb-5 border-b border-border/30 flex items-start justify-between gap-4 flex-shrink-0">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight", tipoCfg.color)}>
+                        {tipoCfg.icon}{tipoCfg.label}
+                      </div>
+                      <div className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight", pilarCfg.color)}>
+                        {pilarCfg.label}
+                      </div>
+                      {isEditing ? (
+                        <Select value={ef.estado ?? viewItem.estado} onValueChange={v => setEditForm(f => ({ ...f, estado: v as ContentEstado }))}>
+                          <SelectTrigger className="h-7 px-3 text-[10px] font-bold uppercase bg-muted/30 border-none rounded-full w-auto">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {Object.entries(ESTADO_CONFIG).map(([v, c]) => (
+                              <SelectItem key={v} value={v} className="text-[12px]">{c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase", ESTADO_CONFIG[viewItem.estado].styles)}>
+                          {ESTADO_CONFIG[viewItem.estado].label}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-muted-foreground/50 font-medium">
+                      {new Date(viewItem.fecha_publicacion + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isEditing ? (
+                      <>
+                        <Button variant="ghost" className="h-9 px-4 text-[13px] rounded-xl" onClick={() => { setIsEditing(false); setEditForm(viewItem); }}>
+                          Cancelar
+                        </Button>
+                        <Button className="h-9 px-5 text-[13px] rounded-xl bg-primary font-bold" onClick={handleSaveEdit} disabled={isSaving}>
+                          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" className="h-9 px-4 text-[13px] rounded-xl gap-2" onClick={() => setIsEditing(true)}>
+                        <FileEdit className="w-3.5 h-3.5" /> Editar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-0 border-b border-border/30 px-8 flex-shrink-0">
+                  {(["contenido", "produccion", ...(canBrief ? ["brief"] : [])] as const).map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab as typeof activeTab)}
+                      className={cn(
+                        "px-4 py-3 text-[12px] font-bold uppercase tracking-wider border-b-2 transition-colors",
+                        activeTab === tab
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground/50 hover:text-muted-foreground"
+                      )}
+                    >
+                      {tab === "contenido" ? "Contenido" : tab === "produccion" ? "Producción" : "Brief GPT"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Body */}
+                <div className="overflow-y-auto flex-1 px-8 py-6">
+
+                  {activeTab === "contenido" && (
+                    <div className="space-y-5">
+                      <Field label="Hook" value={viewItem.hook} field="hook" multiline />
+                      <Field label="Agitación" value={viewItem.agitacion} field="agitacion" multiline />
+                      <Field label="Reencuadre" value={viewItem.reencuadre} field="reencuadre" multiline />
+                      <Field label="Sistema" value={viewItem.sistema} field="sistema" multiline />
+                      <Field label="CTA" value={viewItem.cta} field="cta" />
+                      <Field label="Caption" value={viewItem.caption} field="caption" multiline />
+                      {isEditing ? (
+                        <div className="grid gap-1.5">
+                          <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Hashtags (separados por coma)</span>
+                          <input
+                            className="bg-muted/30 border-none rounded-xl px-3 h-10 text-[13px] w-full outline-none"
+                            value={(ef.hashtags ?? []).join(", ")}
+                            onChange={e => setEditForm(f => ({ ...f, hashtags: e.target.value.split(",").map(h => h.trim()).filter(Boolean) }))}
+                          />
+                        </div>
+                      ) : viewItem.hashtags && viewItem.hashtags.length > 0 && (
+                        <div className="grid gap-1">
+                          <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Hashtags</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {viewItem.hashtags.map(h => (
+                              <span key={h} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted/40 text-muted-foreground">{h}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "produccion" && (
+                    <div className="space-y-5">
+                      {isEditing ? (
+                        <div className="grid gap-1.5">
+                          <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Formato de producción</span>
+                          <Select value={ef.formato_produccion ?? "none"} onValueChange={v => setEditForm(f => ({ ...f, formato_produccion: v === "none" ? null : v as ContentFormato }))}>
+                            <SelectTrigger className="h-10 bg-muted/30 border-none rounded-xl px-3 text-[13px]"><SelectValue placeholder="Sin definir" /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="none">Sin definir</SelectItem>
+                              {Object.entries(FORMATO_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="grid gap-1">
+                          <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Formato de producción</span>
+                          <p className="text-[13px] text-foreground/80">{viewItem.formato_produccion ? FORMATO_LABELS[viewItem.formato_produccion] : <span className="text-muted-foreground/30 italic">—</span>}</p>
+                        </div>
+                      )}
+                      {viewItem.tipo === "reel" && (
+                        isEditing ? (
+                          <div className="grid gap-1.5">
+                            <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Duración (seg)</span>
+                            <input type="number" min={10} max={90}
+                              className="bg-muted/30 border-none rounded-xl px-3 h-10 text-[13px] w-full outline-none"
+                              value={ef.duracion_seg ?? ""}
+                              onChange={e => setEditForm(f => ({ ...f, duracion_seg: e.target.value ? parseInt(e.target.value) : null }))}
+                            />
+                          </div>
+                        ) : (
+                          <div className="grid gap-1">
+                            <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-wider">Duración</span>
+                            <p className="text-[13px] text-foreground/80">{viewItem.duracion_seg ? `${viewItem.duracion_seg} segundos` : <span className="text-muted-foreground/30 italic">—</span>}</p>
+                          </div>
+                        )
+                      )}
+                      <Field label="Descripción visual" value={viewItem.descripcion_visual} field="descripcion_visual" multiline />
+                      <Field label="Guión / Secuencia" value={viewItem.guion} field="guion" multiline />
+                      <Field label="Prompt de imagen" value={viewItem.prompt_imagen} field="prompt_imagen" multiline />
+                      <Field label="URL de imagen" value={viewItem.imagen_url} field="imagen_url" />
+                      {viewItem.imagen_url && !isEditing && (
+                        <img src={viewItem.imagen_url} alt="preview" className="rounded-xl w-full max-h-64 object-cover mt-2" />
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "brief" && canBrief && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold text-foreground/80">Brief listo para GPT-4o</p>
+                          <p className="text-[11px] text-muted-foreground/50 mt-0.5">Copiá el texto, abrí ChatGPT, subí tus fotos de referencia y pegalo.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="h-9 px-4 text-[12px] rounded-xl gap-2"
+                            onClick={saveBriefToDb}
+                          >
+                            Guardar en DB
+                          </Button>
+                          <Button
+                            className="h-9 px-5 text-[12px] rounded-xl gap-2 bg-primary font-bold"
+                            onClick={copyBrief}
+                          >
+                            {copiedBrief ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copiedBrief ? "¡Copiado!" : "Copiar brief"}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="bg-muted/20 rounded-2xl p-4 border border-border/30">
+                        <pre className="text-[11px] text-foreground/70 leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-[420px]">
+                          {buildBrief(viewItem)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+    </TooltipProvider>
+  );
 }

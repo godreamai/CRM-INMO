@@ -1,60 +1,71 @@
 import { supabase } from './supabase';
-import type { ContentItem, ContentStatus } from './types';
+import type { ContentItem, ContentEstado } from './types';
 
 export async function getContentCalendar() {
     const { data, error } = await supabase
         .from('content_calendar')
         .select('*')
-        .order('publish_date', { ascending: true });
+        .order('fecha_publicacion', { ascending: true });
 
-    if (error) {
-        console.error('Error fetching content calendar:', error);
-        throw error;
-    }
-
+    if (error) throw error;
     return data as ContentItem[];
 }
 
-export async function createContentItem(item: Omit<ContentItem, 'id'>) {
+export async function getContentCalendarByMonth(year: number, month: number) {
+    const firstDay = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const lastDay = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+    const { data, error } = await supabase
+        .from('content_calendar')
+        .select('*')
+        .gte('fecha_publicacion', firstDay)
+        .lte('fecha_publicacion', lastDay)
+        .order('fecha_publicacion', { ascending: true });
+
+    if (error) throw error;
+    return data as ContentItem[];
+}
+
+export async function createContentItem(item: Omit<ContentItem, 'id' | 'created_at'>) {
     const { data, error } = await supabase
         .from('content_calendar')
         .insert([item])
         .select();
 
-    if (error) {
-        console.error('Error creating content item:', error);
-        throw error;
-    }
-
+    if (error) throw error;
     return data[0] as ContentItem;
 }
 
-export async function createMultipleContentItems(items: Omit<ContentItem, 'id'>[]) {
+export async function updateContentEstado(id: string, estado: ContentEstado) {
+    const { data, error } = await supabase
+        .from('content_calendar')
+        .update({ estado })
+        .eq('id', id)
+        .select();
+
+    if (error) throw error;
+    return data[0] as ContentItem;
+}
+
+export async function createMultipleContentItems(items: Omit<ContentItem, 'id' | 'created_at'>[]) {
     const { data, error } = await supabase
         .from('content_calendar')
         .insert(items)
         .select();
 
-    if (error) {
-        console.error('Error batch creating content items:', error.message, error.details);
-        throw error;
-    }
-
+    if (error) throw error;
     return data as ContentItem[];
 }
 
-export async function updateContentStatus(id: string, status: ContentStatus) {
+export async function updateContentItem(id: string, updates: Partial<Omit<ContentItem, 'id' | 'created_at'>>) {
     const { data, error } = await supabase
         .from('content_calendar')
-        .update({ status })
+        .update(updates)
         .eq('id', id)
         .select();
 
-    if (error) {
-        console.error('Error updating content status:', error);
-        throw error;
-    }
-
+    if (error) throw error;
     return data[0] as ContentItem;
 }
 
@@ -64,10 +75,6 @@ export async function deleteContentItem(id: string) {
         .delete()
         .eq('id', id);
 
-    if (error) {
-        console.error('Error deleting content item:', error);
-        throw error;
-    }
-
+    if (error) throw error;
     return true;
 }

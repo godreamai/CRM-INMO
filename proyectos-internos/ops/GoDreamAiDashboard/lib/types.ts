@@ -73,25 +73,33 @@ export interface Database {
   };
 }
 
-export type ContentStatus = 'idea' | 'draft' | 'scheduled' | 'published' | 'cancelled';
-export type ContentType = 'video' | 'carousel' | 'image' | 'thread' | 'article';
+export type ContentTipo    = 'reel' | 'carrusel' | 'historia' | 'post_ig' | 'post_linkedin';
+export type ContentPilar   = 'DOLOR' | 'TRANSFORMACION' | 'AUTORIDAD' | 'OBJECION' | 'FUNDADOR';
+export type ContentEstado  = 'borrador' | 'aprobado' | 'publicado';
+export type ContentFormato = 'cara_camara' | 'pantalla' | 'carrusel_diseno' | 'solo_texto';
 
 export interface ContentItem {
   id: string;
-  title: string;
-  type: ContentType;
-  status: ContentStatus;
-  publish_date: string;
-  author: string;
-  drive_link?: string;
-  tags: string[];
-  hook: string | null;
-  copy: string | null;
+  tipo: ContentTipo;
+  pilar: ContentPilar;
+  fecha_publicacion: string;
+  estado: ContentEstado;
+  hook: string;
+  agitacion: string | null;
+  reencuadre: string | null;
+  sistema: string | null;
   cta: string | null;
-  notes: string | null;
-  week: string | null;
-  objective: string | null;
-  created_at?: string;
+  caption: string | null;
+  hashtags: string[] | null;
+  descripcion_visual: string | null;
+  formato_produccion: ContentFormato | null;
+  guion: string | null;
+  duracion_seg: number | null;
+  slides: Record<string, unknown>[] | null;
+  secuencia: Record<string, unknown>[] | null;
+  imagen_url: string | null;
+  prompt_imagen: string | null;
+  created_at: string;
 }
 
 export interface OpportunityHistory {
