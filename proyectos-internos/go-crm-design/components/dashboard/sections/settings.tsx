@@ -19,113 +19,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User,
-  Bell,
   Shield,
   Palette,
-  Link2,
-  Mail,
-  Smartphone,
   Globe,
   Key,
   RefreshCw,
   Check,
-  ExternalLink,
-  Zap,
   Building2,
   Upload,
 } from "lucide-react";
-import { TEAM_SEAT_LIMIT } from "@/lib/constants";
+import { TEAM_SEAT_LIMIT, AGENCY_NAME, AGENCY_LOGO_URL } from "@/lib/constants";
 import { fetchUsdArsRate } from "@/lib/exchange-rate";
 import { cn } from "@/lib/utils";
 
 const ORG_SEATS_USED = 6;
 
-const integrations = [
-  {
-    id: "tokko",
-    name: "Tokko Broker",
-    description: "Sincronizacion de propiedades y contactos",
-    connected: true,
-    lastSync: "Hace 2 horas",
-  },
-  {
-    id: "whatsapp",
-    name: "WhatsApp Business",
-    description: "Mensajeria y notificaciones a clientes",
-    connected: true,
-    lastSync: "Hace 5 min",
-  },
-  {
-    id: "portales",
-    name: "Zonaprop / Argenprop",
-    description: "Recepcion automatica de leads de portales",
-    connected: true,
-    lastSync: "Tiempo real",
-  },
-  {
-    id: "gmail",
-    name: "Gmail",
-    description: "Seguimiento y sincronizacion de emails",
-    connected: false,
-    lastSync: null,
-  },
-  {
-    id: "calendar",
-    name: "Google Calendar",
-    description: "Agenda de visitas y reuniones",
-    connected: false,
-    lastSync: null,
-  },
-  {
-    id: "facturacion",
-    name: "Facturacion electronica",
-    description: "Integracion con AFIP / IIBB para comisiones",
-    connected: true,
-    lastSync: "Hace 1 hora",
-  },
-];
-
-const notificationSettings = [
-  {
-    id: "deal_updates",
-    label: "Cambios en operaciones",
-    description: "Aviso cuando una operacion cambia de estado",
-    email: true,
-    push: true,
-  },
-  {
-    id: "team_activity",
-    label: "Actividad del equipo",
-    description: "Novedades sobre el desempeno del equipo",
-    email: true,
-    push: false,
-  },
-  {
-    id: "pipeline_alerts",
-    label: "Alertas de pipeline",
-    description: "Avisos de leads sin seguimiento a tiempo",
-    email: true,
-    push: true,
-  },
-  {
-    id: "forecast_updates",
-    label: "Proyecciones",
-    description: "Resumen semanal de proyeccion de ventas",
-    email: true,
-    push: false,
-  },
-  {
-    id: "customer_health",
-    label: "Estado de clientes",
-    description: "Alertas cuando un cliente baja su nivel de interes",
-    email: false,
-    push: true,
-  },
-];
-
 export function SettingsSection() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [notifications, setNotifications] = useState(notificationSettings);
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -161,12 +71,6 @@ export function SettingsSection() {
     }
   };
 
-  const toggleNotification = (id: string, type: "email" | "push") => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, [type]: !n[type] } : n))
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -191,20 +95,6 @@ export function SettingsSection() {
           >
             <Building2 className="w-4 h-4 mr-2" />
             Organización
-          </TabsTrigger>
-          <TabsTrigger
-            value="notifications"
-            className="data-[state=active]:bg-card data-[state=active]:text-foreground"
-          >
-            <Bell className="w-4 h-4 mr-2" />
-            Notificaciones
-          </TabsTrigger>
-          <TabsTrigger
-            value="integrations"
-            className="data-[state=active]:bg-card data-[state=active]:text-foreground"
-          >
-            <Link2 className="w-4 h-4 mr-2" />
-            Integraciones
           </TabsTrigger>
           <TabsTrigger
             value="security"
@@ -409,8 +299,12 @@ export function SettingsSection() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
-                  <Building2 className="w-8 h-8 text-muted-foreground" />
+                <div className="w-20 h-20 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0 overflow-hidden">
+                  {AGENCY_LOGO_URL ? (
+                    <img src={AGENCY_LOGO_URL} alt={AGENCY_NAME} className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-muted-foreground" />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Button variant="outline" size="sm">
@@ -426,7 +320,7 @@ export function SettingsSection() {
                   <Label htmlFor="agencyName">Nombre de la inmobiliaria</Label>
                   <Input
                     id="agencyName"
-                    defaultValue="Inmobiliaria Perez"
+                    defaultValue={AGENCY_NAME}
                     className="bg-secondary border-border focus:border-accent"
                   />
                 </div>
@@ -473,141 +367,6 @@ export function SettingsSection() {
                     style={{ width: `${Math.min((ORG_SEATS_USED / TEAM_SEAT_LIMIT) * 100, 100)}%` }}
                   />
                 </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Gestioná invitaciones y roles desde Equipo → Miembros.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Preferencias de notificaciones</CardTitle>
-              <CardDescription>Elegi como y cuando queres ser notificado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <div className="grid grid-cols-[1fr,80px,80px] gap-4 pb-3 border-b border-border text-sm text-muted-foreground">
-                  <span>Tipo de notificacion</span>
-                  <span className="text-center flex items-center justify-center gap-1.5">
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </span>
-                  <span className="text-center flex items-center justify-center gap-1.5">
-                    <Smartphone className="w-4 h-4" />
-                    Push
-                  </span>
-                </div>
-                {notifications.map((notification, index) => (
-                  <div
-                    key={notification.id}
-                    className="grid grid-cols-[1fr,80px,80px] gap-4 py-4 border-b border-border last:border-0 animate-in fade-in slide-in-from-left-2"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{notification.label}</p>
-                      <p className="text-sm text-muted-foreground">{notification.description}</p>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <Switch
-                        checked={notification.email}
-                        onCheckedChange={() => toggleNotification(notification.id, "email")}
-                      />
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <Switch
-                        checked={notification.push}
-                        onCheckedChange={() => toggleNotification(notification.id, "push")}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Integrations Tab */}
-        <TabsContent value="integrations" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Servicios conectados</CardTitle>
-              <CardDescription>Administra tus integraciones con otras herramientas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {integrations.map((integration, index) => (
-                  <div
-                    key={integration.id}
-                    className={`p-4 rounded-lg border transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
-                      integration.connected
-                        ? "bg-secondary/50 border-border hover:border-accent/50"
-                        : "bg-secondary/20 border-border hover:border-muted-foreground/30"
-                    }`}
-                    style={{ animationDelay: `${index * 75}ms` }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            integration.connected ? "bg-accent/20" : "bg-muted"
-                          }`}
-                        >
-                          <Zap
-                            className={`w-5 h-5 ${
-                              integration.connected ? "text-accent" : "text-muted-foreground"
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{integration.name}</p>
-                          <p className="text-sm text-muted-foreground">{integration.description}</p>
-                        </div>
-                      </div>
-                      <Badge
-                        className={
-                          integration.connected
-                            ? "bg-accent/20 text-accent border-accent/30"
-                            : "bg-muted text-muted-foreground border-border"
-                        }
-                      >
-                        {integration.connected ? "Conectado" : "No conectado"}
-                      </Badge>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between">
-                      {integration.connected ? (
-                        <>
-                          <span className="text-xs text-muted-foreground">
-                            Ultima sincronizacion: {integration.lastSync}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" className="h-8">
-                              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                              Sincronizar
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-destructive hover:text-destructive">
-                              Desconectar
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs text-muted-foreground">Sin configurar</span>
-                          <Button
-                            size="sm"
-                            className="h-8 bg-accent hover:bg-accent/90 text-accent-foreground"
-                          >
-                            Conectar
-                            <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>

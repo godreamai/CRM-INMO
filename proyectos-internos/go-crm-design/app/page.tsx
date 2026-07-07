@@ -19,7 +19,7 @@ export default function Dashboard() {
   const renderSection = () => {
     switch (activeSection) {
       case "overview":
-        return <OverviewSection />;
+        return <OverviewSection onNavigate={setActiveSection} />;
       case "webAnalytics":
         return <WebAnalyticsSection />;
       case "properties":
@@ -48,7 +48,7 @@ export default function Dashboard() {
           sidebarCollapsed ? "ml-[72px]" : "ml-[260px]"
         }`}
       >
-        <Header activeSection={activeSection} />
+        <Header activeSection={activeSection} onNavigate={setActiveSection} />
         <main className="flex-1 p-6 overflow-auto">
           <div
             key={activeSection}

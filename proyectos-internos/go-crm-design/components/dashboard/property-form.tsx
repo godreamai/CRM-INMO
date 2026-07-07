@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { X, Upload, Building2, MapPin, DollarSign, Bed, Bath, Maximize2, FileText, Tag, Video, Plus, Trash2, Map } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Upload, Building2, MapPin, DollarSign, Bed, Bath, Maximize2, FileText, Tag, Video, Map } from "lucide-react";
 import type { Property } from "@/components/dashboard/sections/properties";
 import { getYouTubeEmbedUrl } from "@/lib/youtube";
 import { getGoogleMapsEmbedUrl } from "@/lib/maps";
+import { searchAddress, type AddressSuggestion } from "@/lib/geocoding";
 import { MAX_PROPERTY_IMAGES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { PropertyImageUpload } from "@/components/dashboard/property-image-upload";
 
-interface AddPropertyModalProps {
+interface PropertyFormProps {
+  property?: Property;
   onClose: () => void;
-  onAdd: (property: Omit<Property, "id" | "views">) => void;
+  onSubmit: (property: Omit<Property, "id" | "views" | "contactClicks">) => void;
 }
 
 const categories = ["Departamento", "Casa", "PH", "Loft", "Local", "Oficina", "Terreno"];
@@ -53,30 +56,61 @@ const defaultForm: FormData = {
   publicationStatus: "Borrador",
 };
 
-export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
-  const [form, setForm] = useState<FormData>(defaultForm);
-  const [images, setImages] = useState<string[]>([""]);
+export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps) {
+  const isEditing = !!property;
+  const [form, setForm] = useState<FormData>(() =>
+    property
+      ? {
+          title: property.title,
+          type: property.type,
+          category: property.category,
+          price: property.price,
+          address: property.address,
+          neighborhood: property.neighborhood,
+          bedrooms: String(property.bedrooms),
+          bathrooms: String(property.bathrooms),
+          sqm: String(property.sqm),
+          description: property.description,
+          videoUrl: property.videoUrl ?? "",
+          status: property.status,
+          publicationStatus: property.publicationStatus,
+        }
+      : defaultForm
+  );
+  const [images, setImages] = useState<string[]>(() => (property ? [...property.images] : []));
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [step, setStep] = useState<1 | 2>(1);
-  const [mapAddress, setMapAddress] = useState("");
-  const backdropRef = useRef<HTMLDivElement>(null);
+  const [mapAddress, setMapAddress] = useState(property?.address ?? "");
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+
+  useEffect(() => {
+    const query = form.address.trim();
+    if (query.length < 5) {
+      setAddressSuggestions([]);
+      return;
+    }
+    setSearchingAddress(true);
+    const timeout = setTimeout(() => {
+      searchAddress(query)
+        .then(setAddressSuggestions)
+        .catch(() => setAddressSuggestions([]))
+        .finally(() => setSearchingAddress(false));
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [form.address]);
+
+  const selectAddress = (suggestion: AddressSuggestion) => {
+    set("address", suggestion.label);
+    setMapAddress(suggestion.label);
+    setAddressSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   const set = (key: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
-
-  const updateImage = (index: number, value: string) => {
-    setImages((prev) => prev.map((img, i) => (i === index ? value : img)));
-  };
-
-  const addImage = () => {
-    if (images.length >= MAX_PROPERTY_IMAGES) return;
-    setImages((prev) => [...prev, ""]);
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const videoEmbedUrl = form.videoUrl.trim() ? getYouTubeEmbedUrl(form.videoUrl.trim()) : null;
@@ -107,8 +141,7 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
 
   const handleSubmit = () => {
     if (!validateStep2()) return;
-    const cleanedImages = images.map((i) => i.trim()).filter(Boolean);
-    onAdd({
+    onSubmit({
       title: form.title,
       type: form.type,
       category: form.category,
@@ -119,7 +152,7 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
       bathrooms: Number(form.bathrooms),
       sqm: Number(form.sqm),
       description: form.description,
-      images: cleanedImages.length > 0 ? cleanedImages : [DEFAULT_IMAGE],
+      images: images.length > 0 ? images : [DEFAULT_IMAGE],
       videoUrl: form.videoUrl.trim() || undefined,
       status: form.status,
       publicationStatus: form.publicationStatus,
@@ -127,50 +160,39 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
     onClose();
   };
 
-  const handleBackdrop = (e: React.MouseEvent) => {
-    if (e.target === backdropRef.current) onClose();
-  };
-
-  const filledImages = images.filter((i) => i.trim());
-
   return (
-    <div
-      ref={backdropRef}
-      onClick={handleBackdrop}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-    >
-      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
-        {/* Modal header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-accent" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Agregar propiedad</h2>
-              <p className="text-xs text-muted-foreground">Paso {step} de 2</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <div className="max-w-2xl mx-auto bg-card border border-border rounded-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
+        <button
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+          <Building2 className="w-4 h-4 text-accent" />
         </div>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">
+            {isEditing ? "Editar propiedad" : "Agregar propiedad"}
+          </h2>
+          <p className="text-xs text-muted-foreground">Paso {step} de 2</p>
+        </div>
+      </div>
 
-        {/* Step indicator */}
-        <div className="flex gap-1 px-6 pt-4">
-          {([1, 2] as const).map((s) => (
-            <div
-              key={s}
-              className={cn(
-                "h-1 rounded-full flex-1 transition-all duration-300",
-                s <= step ? "bg-accent" : "bg-border"
-              )}
-            />
-          ))}
-        </div>
+      {/* Step indicator */}
+      <div className="flex gap-1 px-6 pt-4">
+        {([1, 2] as const).map((s) => (
+          <div
+            key={s}
+            className={cn(
+              "h-1 rounded-full flex-1 transition-all duration-300",
+              s <= step ? "bg-accent" : "bg-border"
+            )}
+          />
+        ))}
+      </div>
 
         {/* Step 1 */}
         {step === 1 && (
@@ -302,21 +324,49 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
             </div>
 
             {/* Address */}
-            <div>
+            <div className="relative">
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                 <MapPin className="w-3 h-3 inline mr-1" />Direccion *
               </label>
               <input
                 value={form.address}
-                onChange={(e) => set("address", e.target.value)}
-                onBlur={() => setMapAddress(form.address)}
+                onChange={(e) => {
+                  set("address", e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => {
+                  setMapAddress(form.address);
+                  setTimeout(() => setShowSuggestions(false), 150);
+                }}
                 placeholder="Thames 1842, Palermo, CABA"
+                autoComplete="off"
                 className={cn(
                   "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
                   errors.address ? "border-destructive" : "border-border focus:border-accent"
                 )}
               />
               {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
+
+              {showSuggestions && (searchingAddress || addressSuggestions.length > 0) && (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+                  {searchingAddress ? (
+                    <p className="px-3 py-2 text-xs text-muted-foreground">Buscando direcciones...</p>
+                  ) : (
+                    addressSuggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => selectAddress(s)}
+                        className="block w-full text-left px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors truncate"
+                      >
+                        {s.label}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Map preview */}
@@ -325,7 +375,7 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
                 <Map className="w-3 h-3 inline mr-1" />Ubicación en el mapa
               </label>
               {mapAddress.trim().length > 4 ? (
-                <div className="rounded-lg overflow-hidden border border-border h-40">
+                <div className="rounded-lg overflow-hidden border border-border h-64">
                   <iframe
                     src={getGoogleMapsEmbedUrl(mapAddress)}
                     className="w-full h-full"
@@ -396,59 +446,9 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
             {/* Photos (max MAX_PROPERTY_IMAGES) */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                <Upload className="w-3 h-3 inline mr-1" />
-                Fotos ({filledImages.length}/{MAX_PROPERTY_IMAGES})
+                <Upload className="w-3 h-3 inline mr-1" />Fotos
               </label>
-              <div className="space-y-2">
-                {images.map((img, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      value={img}
-                      onChange={(e) => updateImage(i, e.target.value)}
-                      placeholder="https://... (opcional)"
-                      className="flex-1 h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all"
-                    />
-                    {images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={addImage}
-                disabled={images.length >= MAX_PROPERTY_IMAGES}
-                className="mt-2 flex items-center gap-1.5 text-xs text-accent font-medium disabled:opacity-40 disabled:pointer-events-none"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Agregar foto
-              </button>
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                Hasta {MAX_PROPERTY_IMAGES} fotos. Si no cargás ninguna, se usa una imagen por defecto.
-              </p>
-
-              {filledImages.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mt-3">
-                  {filledImages.map((img, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden border border-border bg-secondary">
-                      <img
-                        src={img}
-                        alt={`Foto ${i + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.opacity = "0.15";
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <PropertyImageUpload images={images} onChange={setImages} max={MAX_PROPERTY_IMAGES} />
             </div>
 
             {/* Video URL (YouTube embed) */}
@@ -484,28 +484,27 @@ export function AddPropertyModal({ onClose, onAdd }: AddPropertyModalProps) {
                 <span>Precio: <span className="text-accent font-medium">{form.price || "—"}</span></span>
                 <span>Barrio: <span className="text-foreground">{form.neighborhood}</span></span>
                 <span>Superficie: <span className="text-foreground">{form.sqm || "—"} m²</span></span>
-                <span>Fotos: <span className="text-foreground">{filledImages.length || 1}</span></span>
+                <span>Fotos: <span className="text-foreground">{images.length || 1}</span></span>
                 <span>Video: <span className="text-foreground">{videoEmbedUrl ? "Sí" : "No"}</span></span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-secondary/30 sticky bottom-0">
-          <button
-            onClick={step === 1 ? onClose : () => setStep(1)}
-            className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
-          >
-            {step === 1 ? "Cancelar" : "Atras"}
-          </button>
-          <button
-            onClick={step === 1 ? handleNext : handleSubmit}
-            className="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-all duration-200"
-          >
-            {step === 1 ? "Siguiente" : "Agregar propiedad"}
-          </button>
-        </div>
+      {/* Footer */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-secondary/30 rounded-b-xl">
+        <button
+          onClick={step === 1 ? onClose : () => setStep(1)}
+          className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
+        >
+          {step === 1 ? "Cancelar" : "Atras"}
+        </button>
+        <button
+          onClick={step === 1 ? handleNext : handleSubmit}
+          className="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-all duration-200"
+        >
+          {step === 1 ? "Siguiente" : isEditing ? "Guardar cambios" : "Agregar propiedad"}
+        </button>
       </div>
     </div>
   );

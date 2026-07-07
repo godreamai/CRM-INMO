@@ -1,21 +1,24 @@
 "use client";
 
 import { Eye } from "lucide-react";
+import { initialProperties } from "@/lib/mock-properties";
+import type { Section } from "@/app/page";
 
-const listings = [
-  { title: "PH en Palermo Hollywood", price: "$320,000", views: 842, type: "Venta" },
-  { title: "Apto 2 amb. Belgrano", price: "$185,000", views: 728, type: "Venta" },
-  { title: "Casa en Nordelta", price: "$5,200 /mes", views: 615, type: "Alquiler" },
-  { title: "Loft en Puerto Madero", price: "$450,000", views: 590, type: "Venta" },
-  { title: "Monoambiente Villa Crespo", price: "$980 /mes", views: 504, type: "Alquiler" },
-];
+const listings = [...initialProperties]
+  .sort((a, b) => b.views - a.views)
+  .slice(0, 5)
+  .map((p) => ({ title: p.title, price: p.price, views: p.views, type: p.type }));
 
 const typeColors: Record<string, string> = {
   Venta: "bg-chart-1/15 text-chart-1",
   Alquiler: "bg-accent/15 text-accent",
 };
 
-export function TopListings() {
+interface TopListingsProps {
+  onNavigate?: (section: Section) => void;
+}
+
+export function TopListings({ onNavigate }: TopListingsProps) {
   return (
     <div className="bg-card border border-border rounded-xl p-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-5">
@@ -23,7 +26,12 @@ export function TopListings() {
           <h3 className="text-base font-semibold text-foreground">Propiedades mas vistas</h3>
           <p className="text-sm text-muted-foreground mt-0.5">Top 5 del ultimo mes</p>
         </div>
-        <button className="text-xs text-accent hover:underline transition-all">Ver todas</button>
+        <button
+          onClick={() => onNavigate?.("properties")}
+          className="text-xs text-accent hover:underline transition-all"
+        >
+          Ver todas
+        </button>
       </div>
 
       <div className="space-y-3">

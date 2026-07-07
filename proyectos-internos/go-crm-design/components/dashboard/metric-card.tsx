@@ -7,8 +7,8 @@ import type { LucideIcon } from "lucide-react";
 interface MetricCardProps {
   title: string;
   value: string;
-  change: string;
-  changeType: "positive" | "negative" | "neutral";
+  change?: string;
+  changeType?: "positive" | "negative" | "neutral";
   icon: LucideIcon;
   delay?: number;
 }
@@ -43,20 +43,22 @@ export function MetricCard({
           <span className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
             {value}
           </span>
-          <div
-            className={cn(
-              "flex items-center gap-1 text-sm font-medium mb-1",
-              changeType === "positive" && "text-success",
-              changeType === "negative" && "text-destructive",
-              changeType === "neutral" && "text-muted-foreground"
-            )}
-          >
-            {changeType === "positive" && <TrendingUp className="w-3.5 h-3.5" />}
-            {changeType === "negative" && (
-              <TrendingDown className="w-3.5 h-3.5" />
-            )}
-            <span>{change}</span>
-          </div>
+          {change && (
+            <div
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium mb-1",
+                changeType === "positive" && "text-success",
+                changeType === "negative" && "text-destructive",
+                changeType === "neutral" && "text-muted-foreground"
+              )}
+            >
+              {changeType === "positive" && <TrendingUp className="w-3.5 h-3.5" />}
+              {changeType === "negative" && (
+                <TrendingDown className="w-3.5 h-3.5" />
+              )}
+              <span>{change}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

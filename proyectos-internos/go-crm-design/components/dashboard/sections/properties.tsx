@@ -1,169 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, SlidersHorizontal, MapPin, Bed, Bath, Maximize2, Eye, Pencil, Trash2, Video, Images, Map } from "lucide-react";
-import { AddPropertyModal } from "@/components/dashboard/add-property-modal";
+import { Plus, Search, SlidersHorizontal, MapPin, Bed, Bath, Maximize2, Eye, MessageCircle, Pencil, Trash2, Video, Images, Map } from "lucide-react";
+import { PropertyForm } from "@/components/dashboard/property-form";
 import { Lightbox } from "@/components/dashboard/lightbox";
+import { ImageCarousel } from "@/components/dashboard/image-carousel";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { getYouTubeEmbedUrl } from "@/lib/youtube";
 import { getGoogleMapsEmbedUrl } from "@/lib/maps";
 import { cn } from "@/lib/utils";
+import { initialProperties } from "@/lib/mock-properties";
+import type { Property } from "@/lib/mock-properties";
 
-export interface Property {
-  id: string;
-  title: string;
-  type: "Venta" | "Alquiler";
-  category: string;
-  price: string;
-  address: string;
-  neighborhood: string;
-  bedrooms: number;
-  bathrooms: number;
-  sqm: number;
-  description: string;
-  images: string[];
-  videoUrl?: string;
-  status: "Disponible" | "Reservada" | "Vendida";
-  publicationStatus: "Publicada" | "Borrador" | "Oculta";
-  views: number;
-}
-
-const initialProperties: Property[] = [
-  {
-    id: "1",
-    title: "PH en Palermo Hollywood",
-    type: "Venta",
-    category: "PH",
-    price: "$320,000",
-    address: "Thames 1842, Palermo",
-    neighborhood: "Palermo",
-    bedrooms: 3,
-    bathrooms: 2,
-    sqm: 140,
-    description: "Hermoso PH de 3 ambientes con terraza propia, cocina integrada y luminoso living.",
-    images: [
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80",
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80",
-    ],
-    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    status: "Disponible",
-    publicationStatus: "Publicada",
-    views: 842,
-  },
-  {
-    id: "2",
-    title: "Apartamento 2 amb. Belgrano",
-    type: "Venta",
-    category: "Departamento",
-    price: "$185,000",
-    address: "Cramer 2341, Belgrano",
-    neighborhood: "Belgrano",
-    bedrooms: 2,
-    bathrooms: 1,
-    sqm: 68,
-    description: "Moderno departamento con amenities, piscina y seguridad 24hs en edificio premium.",
-    images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80"],
-    status: "Disponible",
-    publicationStatus: "Publicada",
-    views: 728,
-  },
-  {
-    id: "3",
-    title: "Casa en Nordelta",
-    type: "Alquiler",
-    category: "Casa",
-    price: "$5,200 /mes",
-    address: "Av. Los Lagos 1200, Nordelta",
-    neighborhood: "Tigre",
-    bedrooms: 4,
-    bathrooms: 3,
-    sqm: 280,
-    description: "Amplia casa en barrio privado con jardín, pileta y cochera doble. Ideal familias.",
-    images: [
-      "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80",
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&q=80",
-    ],
-    status: "Reservada",
-    publicationStatus: "Publicada",
-    views: 615,
-  },
-  {
-    id: "4",
-    title: "Loft en Puerto Madero",
-    type: "Venta",
-    category: "Loft",
-    price: "$450,000",
-    address: "Pierina Dealessi 750, Puerto Madero",
-    neighborhood: "Puerto Madero",
-    bedrooms: 1,
-    bathrooms: 1,
-    sqm: 95,
-    description: "Exclusivo loft con vista al rio, terminaciones de lujo y acceso directo al dique.",
-    images: ["https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80"],
-    status: "Disponible",
-    publicationStatus: "Borrador",
-    views: 590,
-  },
-  {
-    id: "5",
-    title: "Monoambiente Villa Crespo",
-    type: "Alquiler",
-    category: "Departamento",
-    price: "$980 /mes",
-    address: "Corrientes 5412, Villa Crespo",
-    neighborhood: "Villa Crespo",
-    bedrooms: 1,
-    bathrooms: 1,
-    sqm: 38,
-    description: "Coqueto monoambiente con balcon, muy luminoso y cerca del subte. Ideal para profesionales.",
-    images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80"],
-    status: "Disponible",
-    publicationStatus: "Publicada",
-    views: 504,
-  },
-  {
-    id: "6",
-    title: "Local comercial Microcentro",
-    type: "Alquiler",
-    category: "Local",
-    price: "$3,800 /mes",
-    address: "Florida 856, Microcentro",
-    neighborhood: "Microcentro",
-    bedrooms: 0,
-    bathrooms: 1,
-    sqm: 120,
-    description: "Amplio local en peatonal Florida, excelente vidriera y alto trafico peatonal.",
-    images: ["https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80"],
-    status: "Disponible",
-    publicationStatus: "Oculta",
-    views: 412,
-  },
-];
+export type { Property } from "@/lib/mock-properties";
 
 const typeFilter = ["Todos", "Venta", "Alquiler"] as const;
 const statusFilter = ["Todos", "Disponible", "Reservada", "Vendida"] as const;
 const publicationFilter = ["Todas", "Publicada", "Borrador", "Oculta"] as const;
 
 const statusColors: Record<Property["status"], string> = {
-  Disponible: "bg-accent/15 text-accent",
-  Reservada: "bg-chart-3/15 text-chart-3",
-  Vendida: "bg-chart-4/15 text-chart-4",
+  Disponible: "bg-accent text-white",
+  Reservada: "bg-chart-3 text-white",
+  Vendida: "bg-chart-4 text-white",
 };
 
 const typeColors: Record<Property["type"], string> = {
-  Venta: "bg-chart-1/15 text-chart-1",
-  Alquiler: "bg-accent/15 text-accent",
+  Venta: "bg-chart-1 text-white",
+  Alquiler: "bg-accent text-white",
 };
 
 const publicationColors: Record<Property["publicationStatus"], string> = {
-  Publicada: "bg-accent/15 text-accent",
-  Borrador: "bg-secondary text-muted-foreground",
-  Oculta: "bg-warning/15 text-warning",
+  Publicada: "bg-accent text-white",
+  Borrador: "bg-muted-foreground text-background",
+  Oculta: "bg-warning text-white",
 };
 
 export function PropertiesSection() {
   const [properties, setProperties] = useState<Property[]>(initialProperties);
-  const [showModal, setShowModal] = useState(false);
+  const [view, setView] = useState<"list" | "form">("list");
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [search, setSearch] = useState("");
   const [activeType, setActiveType] = useState<typeof typeFilter[number]>("Todos");
   const [activeStatus, setActiveStatus] = useState<typeof statusFilter[number]>("Todos");
@@ -180,18 +65,54 @@ export function PropertiesSection() {
     return matchSearch && matchType && matchStatus && matchPublication;
   });
 
-  const handleAdd = (property: Omit<Property, "id" | "views">) => {
+  const handleAdd = (property: Omit<Property, "id" | "views" | "contactClicks">) => {
     const newProp: Property = {
       ...property,
       id: String(Date.now()),
       views: 0,
+      contactClicks: 0,
     };
     setProperties((prev) => [newProp, ...prev]);
+    setView("list");
+  };
+
+  const handleUpdate = (data: Omit<Property, "id" | "views" | "contactClicks">) => {
+    if (!editingProperty) return;
+    setProperties((prev) =>
+      prev.map((p) => (p.id === editingProperty.id ? { ...p, ...data } : p))
+    );
+    setEditingProperty(null);
+    setView("list");
   };
 
   const handleDelete = (id: string) => {
     setProperties((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const openAddForm = () => {
+    setEditingProperty(null);
+    setView("form");
+  };
+
+  const openEditForm = (property: Property) => {
+    setEditingProperty(property);
+    setView("form");
+  };
+
+  const closeForm = () => {
+    setEditingProperty(null);
+    setView("list");
+  };
+
+  if (view === "form") {
+    return (
+      <PropertyForm
+        property={editingProperty ?? undefined}
+        onClose={closeForm}
+        onSubmit={editingProperty ? handleUpdate : handleAdd}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -262,7 +183,7 @@ export function PropertiesSection() {
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={openAddForm}
           className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-all duration-200 shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -291,17 +212,11 @@ export function PropertiesSection() {
             <PropertyCard
               key={property.id}
               property={property}
+              onEdit={openEditForm}
               onDelete={handleDelete}
             />
           ))}
         </div>
-      )}
-
-      {showModal && (
-        <AddPropertyModal
-          onClose={() => setShowModal(false)}
-          onAdd={handleAdd}
-        />
       )}
     </div>
   );
@@ -309,9 +224,11 @@ export function PropertiesSection() {
 
 function PropertyCard({
   property,
+  onEdit,
   onDelete,
 }: {
   property: Property;
+  onEdit: (property: Property) => void;
   onDelete: (id: string) => void;
 }) {
   const [imgError, setImgError] = useState(false);
@@ -338,13 +255,13 @@ function PropertyCard({
         )}
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[85%]">
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold backdrop-blur-sm ${typeColors[property.type]}`}>
+          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${typeColors[property.type]}`}>
             {property.type}
           </span>
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold backdrop-blur-sm ${statusColors[property.status]}`}>
+          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusColors[property.status]}`}>
             {property.status}
           </span>
-          <span className={`text-xs px-2 py-1 rounded-full font-semibold backdrop-blur-sm ${publicationColors[property.publicationStatus]}`}>
+          <span className={`text-xs px-2 py-1 rounded-full font-semibold ${publicationColors[property.publicationStatus]}`}>
             {property.publicationStatus}
           </span>
         </div>
@@ -368,15 +285,36 @@ function PropertyCard({
         )}
         {/* Actions */}
         <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-accent transition-colors">
+          <button
+            onClick={() => onEdit(property)}
+            className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-accent transition-colors"
+          >
             <Pencil className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => onDelete(property.id)}
-            className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar esta propiedad?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Vas a eliminar &quot;{property.title}&quot;. Esta acción no se puede deshacer.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(property.id)}
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                >
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -425,24 +363,16 @@ function PropertyCard({
           <span className="flex items-center gap-1">
             <Eye className="w-3.5 h-3.5" /> {property.views} vistas
           </span>
+          <span className="flex items-center gap-1">
+            <MessageCircle className="w-3.5 h-3.5" /> {property.contactClicks} contactos
+          </span>
           <span className="text-xs text-muted-foreground/60">{property.category}</span>
         </div>
       </div>
 
       {lightbox === "gallery" && (
         <Lightbox onClose={() => setLightbox(null)}>
-          <div className="bg-card rounded-xl border border-border p-3 max-h-[80vh] overflow-y-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {property.images.map((img, i) => (
-                <img
-                  key={i}
-                  src={img}
-                  alt={`${property.title} - foto ${i + 1}`}
-                  className="w-full h-56 object-cover rounded-lg"
-                />
-              ))}
-            </div>
-          </div>
+          <ImageCarousel images={property.images} alt={property.title} />
         </Lightbox>
       )}
 

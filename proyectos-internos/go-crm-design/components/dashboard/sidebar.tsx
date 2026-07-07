@@ -2,6 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { AGENCY_NAME, AGENCY_LOGO_URL } from "@/lib/constants";
 import type { Section } from "@/app/page";
 import {
   LayoutDashboard,
@@ -10,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
-  MapPin,
   Globe,
 } from "lucide-react";
 
@@ -25,7 +25,6 @@ const navItems: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Resumen", icon: LayoutDashboard },
   { id: "webAnalytics", label: "Analitica Web", icon: Globe },
   { id: "properties", label: "Propiedades", icon: Building2 },
-  { id: "team", label: "Equipo", icon: MapPin },
   { id: "reports", label: "Reportes", icon: BarChart3 },
   { id: "settings", label: "Configuracion", icon: Settings },
 ];
@@ -45,17 +44,21 @@ export function Sidebar({
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-accent">
-            <Building2 className="w-5 h-5 text-accent-foreground" />
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-accent overflow-hidden">
+            {AGENCY_LOGO_URL ? (
+              <img src={AGENCY_LOGO_URL} alt={AGENCY_NAME} className="w-full h-full object-cover" />
+            ) : (
+              <Building2 className="w-5 h-5 text-accent-foreground" />
+            )}
           </div>
           <span
             className={cn(
-              "font-bold text-lg text-sidebar-foreground whitespace-nowrap transition-all duration-300 tracking-tight",
+              "font-bold text-base text-sidebar-foreground whitespace-nowrap truncate transition-all duration-300 tracking-tight",
               collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
             )}
           >
-            Go<span className="text-accent">CRM</span>
+            {AGENCY_NAME}
           </span>
         </div>
       </div>
