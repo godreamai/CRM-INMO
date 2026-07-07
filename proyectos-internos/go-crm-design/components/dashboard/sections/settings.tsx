@@ -27,13 +27,13 @@ import {
   Building2,
   Upload,
 } from "lucide-react";
-import { TEAM_SEAT_LIMIT, AGENCY_NAME, AGENCY_LOGO_URL } from "@/lib/constants";
+import { AGENCY_NAME, AGENCY_LOGO_URL } from "@/lib/constants";
 import { fetchUsdArsRate } from "@/lib/exchange-rate";
 import { cn } from "@/lib/utils";
-
-const ORG_SEATS_USED = 6;
+import { useTeamMembers } from "@/components/dashboard/team-members-context";
 
 export function SettingsSection() {
+  const { seatsUsed, seatLimit } = useTeamMembers();
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -357,13 +357,13 @@ export function SettingsSection() {
                 <div className="flex items-center justify-between text-sm mb-1.5">
                   <span className="text-muted-foreground">Cupos de agentes</span>
                   <span className="font-medium text-foreground">
-                    {ORG_SEATS_USED} / {TEAM_SEAT_LIMIT} usados
+                    {seatsUsed} / {seatLimit} usados
                   </span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-accent transition-all duration-500"
-                    style={{ width: `${Math.min((ORG_SEATS_USED / TEAM_SEAT_LIMIT) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((seatsUsed / seatLimit) * 100, 100)}%` }}
                   />
                 </div>
               </div>

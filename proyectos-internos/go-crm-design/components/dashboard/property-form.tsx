@@ -19,9 +19,8 @@ interface PropertyFormProps {
 
 const categories = ["Departamento", "Casa", "PH", "Loft", "Local", "Oficina", "Terreno"];
 const neighborhoods = [
-  "Palermo", "Belgrano", "Recoleta", "Caballito", "Villa Crespo",
-  "Almagro", "San Telmo", "Microcentro", "Puerto Madero", "Flores",
-  "Tigre", "Nordelta", "Vicente Lopez", "San Isidro", "Otro",
+  "Centro", "Barrio Somisa", "Villa Rams", "Costanera", "Barrio Malvinas",
+  "Barrio Sarmiento", "Barrio 9 de Julio", "Barrio Alberdi", "Otro",
 ];
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80";
 
@@ -47,7 +46,7 @@ const defaultForm: FormData = {
   category: "Departamento",
   price: "",
   address: "",
-  neighborhood: "Palermo",
+  neighborhood: "Centro",
   bedrooms: "2",
   bathrooms: "1",
   sqm: "",
@@ -115,6 +114,15 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const handleStatusChange = (value: string) => {
+    const status = value as FormData["status"];
+    setForm((prev) => ({
+      ...prev,
+      status,
+      publicationStatus: status === "Vendida" ? "Oculta" : prev.publicationStatus,
+    }));
+  };
+
   const videoEmbedUrl = form.videoUrl.trim() ? getYouTubeEmbedUrl(form.videoUrl.trim()) : null;
 
   const validateStep1 = () => {
@@ -138,7 +146,7 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
   };
 
   const handleNext = () => {
-    if (validateStep1()) setStep(2);
+    if (readOnly || validateStep1()) setStep(2);
   };
 
   const handleSubmit = () => {
@@ -228,7 +236,7 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Estado</label>
                 <select
                   value={form.status}
-                  onChange={(e) => set("status", e.target.value)}
+                  onChange={(e) => handleStatusChange(e.target.value)}
                   disabled={readOnly}
                   className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
@@ -242,13 +250,18 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                 <select
                   value={form.publicationStatus}
                   onChange={(e) => set("publicationStatus", e.target.value)}
-                  disabled={readOnly}
+                  disabled={readOnly || form.status === "Vendida"}
                   className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option>Borrador</option>
                   <option>Publicada</option>
                   <option>Oculta</option>
                 </select>
+                {form.status === "Vendida" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Se oculta automáticamente al marcar Vendida
+                  </p>
+                )}
               </div>
             </div>
 
@@ -261,7 +274,7 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
                 disabled={readOnly}
-                placeholder="Ej: PH en Palermo Hollywood con terraza"
+                placeholder="Ej: PH en Barrio Somisa con terraza"
                 className={cn(
                   "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                   errors.title ? "border-destructive focus:border-destructive" : "border-border focus:border-accent"
@@ -322,9 +335,10 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                   type="number"
                   value={form.sqm}
                   onChange={(e) => set("sqm", e.target.value)}
+                  disabled={readOnly}
                   placeholder="80"
                   className={cn(
-                    "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
+                    "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                     errors.sqm ? "border-destructive" : "border-border focus:border-accent"
                   )}
                 />
@@ -348,16 +362,17 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                   setMapAddress(form.address);
                   setTimeout(() => setShowSuggestions(false), 150);
                 }}
-                placeholder="Thames 1842, Palermo, CABA"
+                disabled={readOnly}
+                placeholder="Av. Savio 842, San Nicolás de los Arroyos"
                 autoComplete="off"
                 className={cn(
-                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
+                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                   errors.address ? "border-destructive" : "border-border focus:border-accent"
                 )}
               />
               {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
 
-              {showSuggestions && (searchingAddress || addressSuggestions.length > 0) && (
+              {!readOnly && showSuggestions && (searchingAddress || addressSuggestions.length > 0) && (
                 <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
                   {searchingAddress ? (
                     <p className="px-3 py-2 text-xs text-muted-foreground">Buscando direcciones...</p>
@@ -411,7 +426,8 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                   max={20}
                   value={form.bedrooms}
                   onChange={(e) => set("bedrooms", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
@@ -424,7 +440,8 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
                   max={10}
                   value={form.bathrooms}
                   onChange={(e) => set("bathrooms", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -442,10 +459,11 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
               <textarea
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
+                disabled={readOnly}
                 placeholder="Describe las caracteristicas de la propiedad, amenities, estado, orientacion..."
                 rows={4}
                 className={cn(
-                  "w-full px-3 py-2.5 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 resize-none transition-all leading-relaxed",
+                  "w-full px-3 py-2.5 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 resize-none transition-all leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed",
                   errors.description ? "border-destructive" : "border-border focus:border-accent"
                 )}
               />
@@ -457,7 +475,7 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                 <Upload className="w-3 h-3 inline mr-1" />Fotos
               </label>
-              <PropertyImageUpload images={images} onChange={setImages} max={MAX_PROPERTY_IMAGES} />
+              <PropertyImageUpload images={images} onChange={setImages} max={MAX_PROPERTY_IMAGES} readOnly={readOnly} />
             </div>
 
             {/* Video URL (YouTube embed) */}
@@ -468,9 +486,10 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
               <input
                 value={form.videoUrl}
                 onChange={(e) => set("videoUrl", e.target.value)}
+                disabled={readOnly}
                 placeholder="https://youtube.com/watch?v=..."
                 className={cn(
-                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
+                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                   errors.videoUrl ? "border-destructive" : "border-border focus:border-accent"
                 )}
               />
@@ -506,13 +525,15 @@ export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: 
           onClick={step === 1 ? onClose : () => setStep(1)}
           className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
         >
-          {step === 1 ? "Cancelar" : "Atras"}
+          {step === 1 ? (readOnly ? "Cerrar" : "Cancelar") : "Atras"}
         </button>
         <button
-          onClick={step === 1 ? handleNext : handleSubmit}
+          onClick={step === 1 ? handleNext : readOnly ? onClose : handleSubmit}
           className="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-all duration-200"
         >
-          {step === 1 ? "Siguiente" : isEditing ? "Guardar cambios" : "Agregar propiedad"}
+          {step === 1
+            ? readOnly ? "Ver mas" : "Siguiente"
+            : readOnly ? "Cerrar" : isEditing ? "Guardar cambios" : "Agregar propiedad"}
         </button>
       </div>
     </div>

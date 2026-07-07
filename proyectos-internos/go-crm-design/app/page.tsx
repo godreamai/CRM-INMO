@@ -37,28 +37,30 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-        collapsed={sidebarCollapsed}
-        onCollapsedChange={setSidebarCollapsed}
-      />
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ease-out ${
-          sidebarCollapsed ? "ml-[72px]" : "ml-[260px]"
-        }`}
-      >
-        <Header activeSection={activeSection} onNavigate={setActiveSection} />
-        <main className="flex-1 p-6 overflow-auto">
-          <div
-            key={activeSection}
-            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-          >
-            {renderSection()}
-          </div>
-        </main>
+    <TeamMembersProvider>
+      <div className="flex min-h-screen bg-background">
+        <Sidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={setSidebarCollapsed}
+        />
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 ease-out ${
+            sidebarCollapsed ? "ml-[72px]" : "ml-[260px]"
+          }`}
+        >
+          <Header activeSection={activeSection} onNavigate={setActiveSection} />
+          <main className="flex-1 p-6 overflow-auto">
+            <div
+              key={activeSection}
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+            >
+              {renderSection()}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </TeamMembersProvider>
   );
 }

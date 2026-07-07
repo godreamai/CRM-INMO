@@ -8,11 +8,12 @@ interface PropertyImageUploadProps {
   images: string[];
   onChange: (images: string[]) => void;
   max: number;
+  readOnly?: boolean;
 }
 
-export function PropertyImageUpload({ images, onChange, max }: PropertyImageUploadProps) {
+export function PropertyImageUpload({ images, onChange, max, readOnly = false }: PropertyImageUploadProps) {
   const [dragActive, setDragActive] = useState(false);
-  const canAddMore = images.length < max;
+  const canAddMore = !readOnly && images.length < max;
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -47,13 +48,15 @@ export function PropertyImageUpload({ images, onChange, max }: PropertyImageUplo
                 (e.target as HTMLImageElement).style.opacity = "0.15";
               }}
             />
-            <button
-              type="button"
-              onClick={() => removeImage(i)}
-              className="absolute top-1 right-1 w-5 h-5 rounded-md bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
-            >
-              <X className="w-3 h-3" />
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 w-5 h-5 rounded-md bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         ))}
 
@@ -87,7 +90,7 @@ export function PropertyImageUpload({ images, onChange, max }: PropertyImageUplo
         )}
       </div>
       <p className="text-xs text-muted-foreground/60 mt-2">
-        {images.length}/{max} fotos · se suben desde tu equipo (JPG o PNG)
+        {readOnly ? `${images.length} fotos` : `${images.length}/${max} fotos · se suben desde tu equipo (JPG o PNG)`}
       </p>
     </div>
   );

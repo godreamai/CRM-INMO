@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Settings,
   Globe,
+  Users,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ const navItems: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Resumen", icon: LayoutDashboard },
   { id: "webAnalytics", label: "Analitica Web", icon: Globe },
   { id: "properties", label: "Propiedades", icon: Building2 },
+  { id: "team", label: "Equipo", icon: Users },
   { id: "reports", label: "Reportes", icon: BarChart3 },
   { id: "settings", label: "Configuracion", icon: Settings },
 ];
