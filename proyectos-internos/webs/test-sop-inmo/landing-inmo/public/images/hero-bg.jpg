@@ -1,0 +1,8 @@
+﻿<svg width="1600" height="900" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#2c2825"/>
+  <rect x="680" y="340" width="240" height="160" rx="4" fill="#4a3f36"/>
+  <polygon points="800,260 920,340 680,340" fill="#6b5b4e"/>
+  <rect x="740" y="420" width="48" height="80" fill="#4a3f36"/>
+  <rect x="830" y="380" width="40" height="40" fill="#4a3f36"/>
+  <text x="800" y="550" text-anchor="middle" font-family="system-ui" font-size="14" fill="#7a7470">Piedra &amp; Zafa — San Nicolás</text>
+</svg>
