@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
+import { TeamMembersProvider } from "@/components/dashboard/team-members-context";
 import { OverviewSection } from "@/components/dashboard/sections/overview";
 import { WebAnalyticsSection } from "@/components/dashboard/sections/web-analytics";
 import { PropertiesSection } from "@/components/dashboard/sections/properties";

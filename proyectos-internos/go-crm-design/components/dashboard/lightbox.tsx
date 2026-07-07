@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface LightboxProps {
@@ -16,7 +17,7 @@ export function Lightbox({ onClose, children, maxWidthClassName = "max-w-3xl" }:
     if (e.target === backdropRef.current) onClose();
   };
 
-  return (
+  return createPortal(
     <div
       ref={backdropRef}
       onClick={handleBackdrop}
@@ -31,6 +32,7 @@ export function Lightbox({ onClose, children, maxWidthClassName = "max-w-3xl" }:
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, SlidersHorizontal, MapPin, Bed, Bath, Maximize2, Eye, MessageCircle, Pencil, Trash2, Video, Images, Map } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, MapPin, Bed, Bath, Maximize2, Eye, MessageCircle, Pencil, Trash2, Video, Images, Map, ScanEye } from "lucide-react";
 import { PropertyForm } from "@/components/dashboard/property-form";
 import { Lightbox } from "@/components/dashboard/lightbox";
 import { ImageCarousel } from "@/components/dashboard/image-carousel";
@@ -49,6 +49,11 @@ export function PropertiesSection() {
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [view, setView] = useState<"list" | "form">("list");
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit" | "view">("create");
+  const [activeLightbox, setActiveLightbox] = useState<{
+    propertyId: string;
+    type: "gallery" | "video" | "map";
+  } | null>(null);
   const [search, setSearch] = useState("");
   const [activeType, setActiveType] = useState<typeof typeFilter[number]>("Todos");
   const [activeStatus, setActiveStatus] = useState<typeof statusFilter[number]>("Todos");
@@ -91,11 +96,19 @@ export function PropertiesSection() {
 
   const openAddForm = () => {
     setEditingProperty(null);
+    setFormMode("create");
     setView("form");
   };
 
   const openEditForm = (property: Property) => {
     setEditingProperty(property);
+    setFormMode("edit");
+    setView("form");
+  };
+
+  const openViewForm = (property: Property) => {
+    setEditingProperty(property);
+    setFormMode("view");
     setView("form");
   };
 
@@ -108,8 +121,9 @@ export function PropertiesSection() {
     return (
       <PropertyForm
         property={editingProperty ?? undefined}
+        readOnly={formMode === "view"}
         onClose={closeForm}
-        onSubmit={editingProperty ? handleUpdate : handleAdd}
+        onSubmit={formMode === "edit" ? handleUpdate : handleAdd}
       />
     );
   }
@@ -212,8 +226,12 @@ export function PropertiesSection() {
             <PropertyCard
               key={property.id}
               property={property}
+              onView={openViewForm}
               onEdit={openEditForm}
               onDelete={handleDelete}
+              lightbox={activeLightbox?.propertyId === property.id ? activeLightbox.type : null}
+              onOpenLightbox={(type) => setActiveLightbox({ propertyId: property.id, type })}
+              onCloseLightbox={() => setActiveLightbox(null)}
             />
           ))}
         </div>
@@ -224,15 +242,22 @@ export function PropertiesSection() {
 
 function PropertyCard({
   property,
+  onView,
   onEdit,
   onDelete,
+  lightbox,
+  onOpenLightbox,
+  onCloseLightbox,
 }: {
   property: Property;
+  onView: (property: Property) => void;
   onEdit: (property: Property) => void;
   onDelete: (id: string) => void;
+  lightbox: "gallery" | "video" | "map" | null;
+  onOpenLightbox: (type: "gallery" | "video" | "map") => void;
+  onCloseLightbox: () => void;
 }) {
   const [imgError, setImgError] = useState(false);
-  const [lightbox, setLightbox] = useState<"gallery" | "video" | "map" | null>(null);
 
   const videoEmbedUrl = property.videoUrl ? getYouTubeEmbedUrl(property.videoUrl) : null;
 
@@ -244,7 +269,7 @@ function PropertyCard({
           <img
             src={property.images[0]}
             alt={property.title}
-            onClick={() => setLightbox("gallery")}
+            onClick={() => onOpenLightbox("gallery")}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
             onError={() => setImgError(true)}
           />
@@ -267,7 +292,7 @@ function PropertyCard({
         </div>
         {property.images.length > 1 && (
           <button
-            onClick={() => setLightbox("gallery")}
+            onClick={() => onOpenLightbox("gallery")}
             className="absolute bottom-3 left-3 flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-foreground hover:bg-background transition-colors"
           >
             <Images className="w-3.5 h-3.5" />
@@ -276,7 +301,7 @@ function PropertyCard({
         )}
         {videoEmbedUrl && (
           <button
-            onClick={() => setLightbox("video")}
+            onClick={() => onOpenLightbox("video")}
             className="absolute bottom-3 right-3 flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-foreground hover:bg-background transition-colors"
           >
             <Video className="w-3.5 h-3.5 text-accent" />
@@ -285,6 +310,12 @@ function PropertyCard({
         )}
         {/* Actions */}
         <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={() => onView(property)}
+            className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-accent transition-colors"
+          >
+            <ScanEye className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => onEdit(property)}
             className="w-7 h-7 rounded-lg bg-background/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-accent transition-colors"
@@ -331,7 +362,7 @@ function PropertyCard({
             <span className="truncate">{property.address}</span>
           </span>
           <button
-            onClick={() => setLightbox("map")}
+            onClick={() => onOpenLightbox("map")}
             className="flex items-center gap-1 text-accent font-medium shrink-0 hover:underline"
           >
             <Map className="w-3 h-3" />
@@ -371,13 +402,13 @@ function PropertyCard({
       </div>
 
       {lightbox === "gallery" && (
-        <Lightbox onClose={() => setLightbox(null)}>
+        <Lightbox onClose={onCloseLightbox}>
           <ImageCarousel images={property.images} alt={property.title} />
         </Lightbox>
       )}
 
       {lightbox === "video" && videoEmbedUrl && (
-        <Lightbox onClose={() => setLightbox(null)}>
+        <Lightbox onClose={onCloseLightbox}>
           <div className="aspect-video rounded-xl overflow-hidden border border-border bg-black">
             <iframe
               src={videoEmbedUrl}
@@ -390,7 +421,7 @@ function PropertyCard({
       )}
 
       {lightbox === "map" && (
-        <Lightbox onClose={() => setLightbox(null)}>
+        <Lightbox onClose={onCloseLightbox}>
           <iframe
             src={getGoogleMapsEmbedUrl(property.address)}
             className="w-full h-[480px] rounded-xl border border-border"

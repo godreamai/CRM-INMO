@@ -22,7 +22,6 @@ import {
   Shield,
   Palette,
   Globe,
-  Key,
   RefreshCw,
   Check,
   Building2,
@@ -406,80 +405,6 @@ export function SettingsSection() {
                   />
                 </div>
                 <Button variant="outline">Actualizar contrasena</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Autenticacion en dos pasos</CardTitle>
-              <CardDescription>Agrega una capa extra de seguridad a tu cuenta</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-                    <Key className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Aplicacion autenticadora</p>
-                    <p className="text-sm text-muted-foreground">
-                      Usa una app autenticadora para los codigos de 2FA
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge className="bg-accent/20 text-accent border-accent/30">Activado</Badge>
-                  <Button variant="outline" size="sm">
-                    Administrar
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Sesiones activas</CardTitle>
-              <CardDescription>Administra los dispositivos donde iniciaste sesion</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { device: "Notebook oficina", location: "Buenos Aires, AR", current: true, time: "Ahora" },
-                  { device: "iPhone 15", location: "Buenos Aires, AR", current: false, time: "Hace 2 horas" },
-                  { device: "Chrome en Windows", location: "Rosario, AR", current: false, time: "Hace 1 dia" },
-                ].map((session, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border animate-in fade-in slide-in-from-left-2"
-                    style={{ animationDelay: `${index * 75}ms` }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {session.device}
-                          {session.current && (
-                            <Badge className="ml-2 bg-accent/20 text-accent border-accent/30 text-xs">
-                              Actual
-                            </Badge>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {session.location} • {session.time}
-                        </p>
-                      </div>
-                    </div>
-                    {!session.current && (
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        Revocar
-                      </Button>
-                    )}
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>

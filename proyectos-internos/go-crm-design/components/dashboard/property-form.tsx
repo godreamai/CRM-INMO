@@ -12,6 +12,7 @@ import { PropertyImageUpload } from "@/components/dashboard/property-image-uploa
 
 interface PropertyFormProps {
   property?: Property;
+  readOnly?: boolean;
   onClose: () => void;
   onSubmit: (property: Omit<Property, "id" | "views" | "contactClicks">) => void;
 }
@@ -56,7 +57,7 @@ const defaultForm: FormData = {
   publicationStatus: "Borrador",
 };
 
-export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps) {
+export function PropertyForm({ property, readOnly = false, onClose, onSubmit }: PropertyFormProps) {
   const isEditing = !!property;
   const [form, setForm] = useState<FormData>(() =>
     property
@@ -86,6 +87,7 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
   const [searchingAddress, setSearchingAddress] = useState(false);
 
   useEffect(() => {
+    if (readOnly) return;
     const query = form.address.trim();
     if (query.length < 5) {
       setAddressSuggestions([]);
@@ -175,7 +177,7 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
         </div>
         <div>
           <h2 className="text-base font-semibold text-foreground">
-            {isEditing ? "Editar propiedad" : "Agregar propiedad"}
+            {readOnly ? "Ver propiedad" : isEditing ? "Editar propiedad" : "Agregar propiedad"}
           </h2>
           <p className="text-xs text-muted-foreground">Paso {step} de 2</p>
         </div>
@@ -208,9 +210,10 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                     <button
                       key={t}
                       type="button"
+                      disabled={readOnly}
                       onClick={() => set("type", t)}
                       className={cn(
-                        "flex-1 py-1.5 rounded-md text-xs font-medium transition-all",
+                        "flex-1 py-1.5 rounded-md text-xs font-medium transition-all disabled:cursor-not-allowed",
                         form.type === t
                           ? "bg-accent text-accent-foreground"
                           : "text-muted-foreground hover:text-foreground"
@@ -226,7 +229,8 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                 <select
                   value={form.status}
                   onChange={(e) => set("status", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option>Disponible</option>
                   <option>Reservada</option>
@@ -238,7 +242,8 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                 <select
                   value={form.publicationStatus}
                   onChange={(e) => set("publicationStatus", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option>Borrador</option>
                   <option>Publicada</option>
@@ -255,9 +260,10 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
               <input
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
+                disabled={readOnly}
                 placeholder="Ej: PH en Palermo Hollywood con terraza"
                 className={cn(
-                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
+                  "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                   errors.title ? "border-destructive focus:border-destructive" : "border-border focus:border-accent"
                 )}
               />
@@ -271,7 +277,8 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                 <select
                   value={form.category}
                   onChange={(e) => set("category", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {categories.map((c) => <option key={c}>{c}</option>)}
                 </select>
@@ -281,7 +288,8 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                 <select
                   value={form.neighborhood}
                   onChange={(e) => set("neighborhood", e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent"
+                  disabled={readOnly}
+                  className="w-full h-9 px-3 rounded-lg bg-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {neighborhoods.map((n) => <option key={n}>{n}</option>)}
                 </select>
@@ -297,9 +305,10 @@ export function PropertyForm({ property, onClose, onSubmit }: PropertyFormProps)
                 <input
                   value={form.price}
                   onChange={(e) => set("price", e.target.value)}
+                  disabled={readOnly}
                   placeholder="$200,000"
                   className={cn(
-                    "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all",
+                    "w-full h-9 px-3 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed",
                     errors.price ? "border-destructive" : "border-border focus:border-accent"
                   )}
                 />
